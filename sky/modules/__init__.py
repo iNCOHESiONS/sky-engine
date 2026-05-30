@@ -1,6 +1,8 @@
-from .hot_reload import HotReload, hot_reloadable
+from .hcr import HotComponentReloading, hot_reloadable
+from .live_reloading import LiveReloading
 
 __all__ = [
     "hot_reloadable",
-    "HotReload",
+    "HotComponentReloading",
+    "LiveReloading",
 ]
