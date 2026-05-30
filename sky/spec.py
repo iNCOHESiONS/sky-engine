@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import KW_ONLY, dataclass, field
+from logging import getLogger
 from typing import Literal, Self, final
 
 from pygame import Surface
 
 from ._managers import Keyboard, Mouse
 from .colors import BLACK
-from .core import Component, InputManager, Module
+from .core import Component, InputManager, Logger, Module
 from .utils import Color, Vector2
 
 __all__ = [
@@ -56,10 +57,10 @@ class WindowSpec:
     """The list of constructors for the input managers that will be updated every frame by this window. Includes `Keyboard` and `Mouse` by default."""
 
     position: Vector2 | None = None
-    """The window's position. Centers it on the main monitor by default."""
+    """The window's position. If `None`, the default, simply centers the window on the main monitor."""
 
     resizable: bool = False
-    """Whether or not the window can be resized. Posts a pygame.WINDOWRESIZED event whenever resized."""
+    """Whether or not the window can be resized. Posts a `pygame.WINDOWRESIZED` event whenever resized."""
 
     size: Vector2 = field(default_factory=lambda: Vector2(800, 600))
     """The window's size. 800x600 by default."""
@@ -71,7 +72,7 @@ class WindowSpec:
     """The window's title. "Sky Engine" by default."""
 
     transparency_color: Color | None = None
-    """The window's transparency key color. All pixels that match this color will be colored transparent instead. Windows only."""
+    """The window's transparency key color. All pixels that match this color will be transparent instead. Windows only."""
 
     use_surface: bool = True
     """Whether or not to call `get_surface` once the underlying window is created. Setting this to `False` is necessary to use pygame's new `_sdl2.video.Renderer` class."""
@@ -100,7 +101,16 @@ class AppSpec:
     """The default scene to add to the app. If `None`, will not create a default scene."""
 
     modules: list[type[Module] | Module] = field(default_factory=list)
-    """A list of modules (or module types) whose lifetime is to be handled by the `App`. For that purpose, each module must have an `init` and `quit` method."""
+    """
+    A list of modules (or module types) whose lifetime is to be handled by the `App`.
+    For that purpose, each module must have an `init` and `quit` method, per the `Module` `Protocol`.
+    """
+
+    logger: Logger = field(default_factory=getLogger)
+    """
+    The logger to use. Must follow the `Logger` Protocol, i.e., must have `debug`, `info`, `warn` and `error` methods.
+    By default, uses an unmodified, unnamed logger returned by `getLogger` from the built-in `logging` module.
+    """
 
     # general debugging flag that currently does nothing internally
     debug: bool = False

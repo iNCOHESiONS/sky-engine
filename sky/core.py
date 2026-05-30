@@ -6,7 +6,16 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterator
 from dataclasses import KW_ONLY, dataclass, field
 from enum import Enum, IntEnum, auto, unique
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Protocol, Self, final
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    ClassVar,
+    Protocol,
+    Self,
+    final,
+    override,
+)
 
 import pygame
 from screeninfo import Monitor as ScreenInfoMonitor
@@ -24,7 +33,9 @@ __all__ = [
     "Cursor",
     "Key",
     "Keybinding",
+    "Logger",
     "Modifier",
+    "Module",
     "Monitor",
     "MouseButton",
     "State",
@@ -88,14 +99,27 @@ class InputManager(ABC):
 class Module(Protocol):
     """
     A protocol class describing modules, objects whose lifetime is handled by the `App`.
-    See the `modules` argument in `AppSpec`.\n
-    Requires `init` and `quit` methods that each take no arguments.\n
+    Modules are added via the `modules` argument in `AppSpec`, or the `add_module` method.\n
     Useful for loading `pygame` modules such as `freetype` and `mixer`, but one may create their own.
+    See the `modules` folder for examples.\n
+    Requires `init` and `quit` methods that each take no arguments.
     """
 
     def init(self) -> None: ...
 
     def quit(self) -> None: ...
+
+
+class Logger(Protocol):
+    """A protocol class describing a simple format loggers must follow to be used in `App`."""
+
+    def debug(self, msg: str) -> None: ...
+
+    def info(self, msg: str) -> None: ...
+
+    def warning(self, msg: str) -> None: ...
+
+    def error(self, msg: str) -> None: ...
 
 
 @final

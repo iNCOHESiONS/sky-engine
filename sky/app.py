@@ -13,14 +13,7 @@ from .core import Component, InputManager, Module, Monitor, Service
 from .hook import Hook
 from .scene import Scene
 from .spec import AppSpec, SceneSpec, WindowSpec
-from .utils import (
-    attempt_empty_call,
-    filter_by_type,
-    filterl,
-    first,
-    is_callable_with_no_arguments,
-    singleton,
-)
+from .utils import attempt_empty_call, filter_by_type, filterl, first, singleton
 from .window import Window
 from .yieldable import Yieldable
 
@@ -67,7 +60,6 @@ class App:
         - `Windowing` (handles windowing)
         - `Chrono` (handles time-related data)
         - `Executor` (handles coroutines)
-        - `UI` (handles the user interface, WIP)
 
     Constructor Parameters
     ----------------------
@@ -106,6 +98,8 @@ class App:
             else spec or AppSpec()
         )
         """The app's specification, i.e., pre-execution configuration."""
+
+        self.logger = self.spec.logger
 
         self.on_preload = Hook()
         """Executes before scenes and services are started up, just after mainloop is called."""
@@ -182,10 +176,11 @@ class App:
 
         Raises
         ------
-        `IndexError`
+        `AssertionError`
             If there are no scenes.
         """
 
+        assert self._scenes
         return self._scenes[-1]
 
     @property
@@ -706,13 +701,11 @@ class App:
             If a type is passed that cannot be instanced with no arguments.
         """
 
-        if callable(module) and not is_callable_with_no_arguments(module):
-            raise ValueError(
-                f"{module.__name__} cannot be instanced with no arguments!"
-            )
-
         if isinstance(module, type):
-            module = module()
+            module = attempt_empty_call(
+                module,
+                err=f"Module {module.__name__} cannot be instanced with no arguments.",
+            )
 
         module.init()
         self.on_cleanup += module.quit
