@@ -30,7 +30,17 @@ class Keyboard(InputManager):
         self._keybindings: list[Keybinding] = []
         self._active_keybindings: list[Keybinding] = []
 
-        self._setup_hooks()
+        self.on_key = Hook[[Key, State]]()
+        """Executes whenever the state of any key changes, including changes to `State.none`"""
+
+        self.on_key_pressed = Hook[[Key]]()
+        """Executes whenever the state of any key changes `State.pressed`"""
+
+        self.on_key_downed = Hook[[Key]]()
+        """Executes whenever the state of any key changes `State.downed`"""
+
+        self.on_key_released = Hook[[Key]]()
+        """Executes whenever the state of any key changes `State.released`"""
 
     @property
     def states(self) -> Mapping[Key, State]:
@@ -337,13 +347,14 @@ class Keyboard(InputManager):
 
         Raises
         ------
-        `AssertionError`
+        `ValueError`
             If `state` is `State.none`.
         """
 
         state = State.convert(state)
 
-        assert state != State.none
+        if state == State.none:
+            raise ValueError("State is none.")
 
         return int(self.is_state(pos, state)) - int(self.is_state(neg, state))
 
@@ -383,7 +394,7 @@ class Keyboard(InputManager):
 
         Raises
         ------
-        `AssertionError`
+        `ValueError`
             If `state` is `State.none`.
         """
 
@@ -393,67 +404,3 @@ class Keyboard(InputManager):
         )
 
         return movement.normalize() if normalize else movement
-
-    def get_movement_3d(
-        self,
-        horizontal_axis: tuple[KeyLike, KeyLike],
-        vertical_axis: tuple[KeyLike, KeyLike],
-        forward_axis: tuple[KeyLike, KeyLike],
-        /,
-        *,
-        state: StateLike = State.pressed,
-        order: Literal["XYZ", "XZY"] = "XYZ",
-        normalize: bool = True,
-    ) -> Vector3:
-        """
-        Three axis to use for movement.\n
-        Ordering defaults to "XYZ" (horizontal, vertical, forward) but can be changed to "XZY" (horizontal, forward, vertical).
-
-        Parameters
-        ----------
-        vertical_axis: `tuple[KeyLike, KeyLike]`
-            The keys to check for vertical movement.
-        horizontal_axis: `tuple[KeyLike, KeyLike]`
-            The keys to check for horizontal movement.
-        forward_axis: `tuple[KeyLike, KeyLike]`
-            The keys to check for forward movement.
-        state: `StateLike`
-            The state to check for. Cannot be `State.none`. Defaults to `State.pressed`.
-        order: `Literal["XYZ", "XZY"]`
-            The order of the axes. Defaults to "XYZ".
-        normalize: `bool`
-            Whether to normalize the movement to the range [0, 1]. Defaults to `True`.
-
-        Returns
-        -------
-        `Vector3`
-            The movement of the keys.
-
-        Raises
-        ------
-        `AssertionError`
-            If `state` is `State.none`.
-        """
-        movement = Vector3(
-            self.get_axis(*horizontal_axis, state=state),
-            self.get_axis(*vertical_axis, state=state),
-            self.get_axis(*forward_axis, state=state),
-        )
-
-        if order == "XZY":
-            movement = Vector3(movement.xzy)  # pygame.math.Vector3 -> sky.Vector3
-
-        return movement.normalize() if normalize else movement
-
-    def _setup_hooks(self) -> None:
-        self.on_key = Hook[[Key, State]]()
-        """Executes whenever the state of any key changes, including changes to `State.none`"""
-
-        self.on_key_pressed = Hook[[Key]]()
-        """Executes whenever the state of any key changes `State.pressed`"""
-
-        self.on_key_downed = Hook[[Key]]()
-        """Executes whenever the state of any key changes `State.downed`"""
-
-        self.on_key_released = Hook[[Key]]()
-        """Executes whenever the state of any key changes `State.released`"""
