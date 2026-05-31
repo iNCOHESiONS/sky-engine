@@ -35,13 +35,13 @@ class _HCREventHandler(FileSystemEventHandler):
         mod_name = self._resolve_module_name(path)
 
         if mod_name == __main__.__name__:
-            self._app.logger.warn(
+            self._app.logger.warning(
                 "The app's entrypoint cannot be hot reloaded. Skipping."
             )
             return
 
         if mod_name not in sys.modules:
-            self._app.logger.warn(
+            self._app.logger.warning(
                 f"Module {mod_name} at path {path} was added during runtime. Restart the app if you wish to add a new module."
             )
             return
@@ -49,7 +49,7 @@ class _HCREventHandler(FileSystemEventHandler):
         try:
             mod = importlib.reload(sys.modules[mod_name])
         except Exception:
-            self._app.logger.warn(
+            self._app.logger.warning(
                 f"An error occurred while reloading module {mod_name}. Skipping."
             )
             return
@@ -94,16 +94,18 @@ class _HCREventHandler(FileSystemEventHandler):
 class HotComponentReloading(Module):
     """
     Module that adds support for hot reloading specified `Component`s from the specified directory.
-    Use `on_reload` to add any callbacks to be executed after a `Component` is reloaded. It provides the `Component`'s old class, and current, new, one.
+    Use `on_reload` to add any callbacks to be executed after a `Component` is reloaded. It provides the `Component`'s old class, and current, new, one.\n
+    Note that HCR only modifies a `Component`'s methods and class variables, as it updates its `__class__`, and does not modify any instance attributes stored in `__dict__`.
+    This means that any attributes set in `__init__` or `start` will remain unchanged unless those methods are rerun.
 
     Examples
     --------
-
     ```python
     class SomeComponent(Component, hot_reloadable=True): ...
+    ```
 
-
-    @hot_reloadable  # equivalent
+    ```python
+    @hot_reloadable  # alternative
     class SomeOtherComponent(Component): ...
     ```
     """

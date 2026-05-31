@@ -6,16 +6,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterator
 from dataclasses import KW_ONLY, dataclass, field
 from enum import Enum, IntEnum, auto, unique
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    ClassVar,
-    Protocol,
-    Self,
-    final,
-    override,
-)
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Protocol, Self, final
 
 import pygame
 from screeninfo import Monitor as ScreenInfoMonitor
@@ -45,7 +36,7 @@ __all__ = [
 class Component(ABC):
     """Base class for components."""
 
-    app: ClassVar[App] = None  # pyright: ignore[reportAssignmentType]
+    app: ClassVar[App]
 
     def __init_subclass__(cls, *, hot_reloadable: bool = False, **kwargs: Any) -> None:
         if hot_reloadable:
@@ -79,7 +70,7 @@ class Service(Component, ABC):
 class InputManager(ABC):
     """Base class for per-window input managers."""
 
-    app: ClassVar[App] = None  # pyright: ignore[reportAssignmentType]
+    app: ClassVar[App]
 
     def __init__(self, window: Window, /) -> None:
         self._window = window

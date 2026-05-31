@@ -1008,11 +1008,13 @@ def ilen(i: Iterable[Any], /) -> int:
 
 def mapl[T, U](f: Callable[[T], U], i: Iterable[T]) -> list[U]:
     """Like `map`, but it returns a `list` instead."""
+
     return list(map(f, i))
 
 
 def filterl[T](f: Callable[[T], bool], i: Iterable[T]) -> list[T]:
     """Like `filter`, but it returns a `list` instead."""
+
     return list(filter(f, i))
 
 

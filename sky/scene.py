@@ -23,19 +23,17 @@ class Scene:
     Note that `Scene`s can be started and stopped multiple times, and their `start` and `stop` methods will be called each time.
 
     Hooks:
-        ```
-        Pre-loop:
-            pre_start (before components are started)
-            post_start (after components are started)
+        - Pre-loop
+            - pre_start (before components are started)
+            - post_start (after components are started)
 
-        During loop:
-            pre_update (before components are updated)
-            post_update (after components are updated)
+        - During loop
+            - pre_update (before components are updated)
+            - post_update (after components are updated)
 
-        Post-loop:
-            pre_stop (before components are stopped)
-            post_stop (after components are stopped)
-        ```
+        - Post-loop
+            - pre_stop (before components are stopped)
+            - post_stop (after components are stopped)
     """
 
     app: ClassVar[App] = None  # pyright: ignore[reportAssignmentType]
