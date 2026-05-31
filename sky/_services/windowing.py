@@ -160,7 +160,8 @@ class Windowing(Service):
             window.destroy()
 
     def _initialize(self) -> None:
-        assert self.spec
+        if self.spec is None:
+            raise ValueError("spec cannot be `None`.")
 
         self.add_window(spec=self.spec)
 

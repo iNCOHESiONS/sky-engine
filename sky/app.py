@@ -176,11 +176,13 @@ class App:
 
         Raises
         ------
-        `AssertionError`
-            If there are no scenes.
+        `ValueError`
+            If the app has no scenes.
         """
 
-        assert self._scenes
+        if not self._scenes:
+            raise ValueError("The app has no scenes.")
+
         return self._scenes[-1]
 
     @property
@@ -208,11 +210,15 @@ class App:
 
         Raises
         ------
-        `AssertionError`
+        `ValueError`
             If the main window is not set (i.e. no windows are open due to the app being in headless mode).
         """
 
-        assert self.windowing.main_window is not None
+        if self.windowing.main_window is None:
+            raise ValueError(
+                "The app is in headless mode, and as such, has no windows."
+            )
+
         return self.windowing.main_window
 
     @property
@@ -227,7 +233,7 @@ class App:
 
         Raises
         ------
-        `AssertionError`
+        `ValueError`
             If the main window is not set (i.e. no windows are open due to the app being in headless mode).
         """
 
@@ -245,7 +251,7 @@ class App:
 
         Raises
         ------
-        `AssertionError`
+        `ValueError`
             If the main window is not set (i.e. no windows are open due to the app being in headless mode).
         """
 
@@ -263,7 +269,7 @@ class App:
 
         Raises
         ------
-        `AssertionError`
+        `ValueError`
             If the main window is not set (i.e. no windows are open due to the app being in headless mode).
         """
 

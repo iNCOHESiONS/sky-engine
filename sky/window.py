@@ -120,11 +120,13 @@ class Window:
 
         Raises
         ------
-        `AssertionError`
+        `ValueError`
             If no input manager was found, i.e., it wasn't included in this `Window`'s spec.
         """
 
-        assert self._keyboard
+        if self._keyboard is None:
+            raise ValueError("Keyboard input manager was not found.")
+
         return self._keyboard
 
     @property
@@ -134,11 +136,13 @@ class Window:
 
         Raises
         ------
-        `AssertionError`
+        `ValueError`
             If no input manager was found, i.e., it wasn't included in this `Window`'s spec.
         """
 
-        assert self._mouse
+        if self._mouse is None:
+            raise ValueError("Mouse input manager was not found.")
+
         return self._mouse
 
     @property

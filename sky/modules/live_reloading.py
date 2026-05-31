@@ -34,7 +34,8 @@ class LiveReloading(Module):
     def __init__(
         self, /, *, directory: Path | str = ".", recursive: bool = True
     ) -> None:
-        assert (directory := Path(directory)).is_dir()
+        if not (directory := Path(directory)).is_dir():
+            raise ValueError(f"{directory} must be a directory.")
 
         self.before_reload = Hook()
 
