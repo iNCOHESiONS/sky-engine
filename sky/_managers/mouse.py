@@ -31,10 +31,32 @@ class Mouse(InputManager):
 
         self._states = {btn.value: State.none for btn in MouseButton}
 
-        self._setup_hooks()
+        self.on_mouse_button = Hook[[MouseButton, State]]()
+        """Executes whenever the state of any mouse button changes, including changes to `State.none`"""
+
+        self.on_mouse_button_pressed = Hook[[MouseButton]]()
+        """Executes whenever the state of any mouse button changes `State.pressed`"""
+
+        self.on_mouse_button_downed = Hook[[MouseButton]]()
+        """Executes whenever the state of any mouse button changes `State.downed`"""
+
+        self.on_mouse_button_released = Hook[[MouseButton]]()
+        """Executes whenever the state of any mouse button changes `State.released`"""
+
+        self.on_mouse_wheel = Hook[[Vector2]]()
+        """Executes whenever the mouse wheel is scrolled. Inputs on the x-axis happen when the wheel is scrolled while shift is being pressed."""
+
+        self.on_scroll = self.on_mouse_wheel  # alias
+        """Executes whenever the mouse wheel is scrolled. Inputs on the x-axis happen when the wheel is scrolled while shift is being pressed. Alias for `on_mouse_wheel`."""
+
+        self.on_mouse_move = Hook()
+        """Executes whenever the mouse's velocity is different from zero."""
 
         self.use_system = False
-        """Whether or not to use system-level APIs to track the mouse's position. Note that its position can be negative when outside the window."""
+        """
+        Whether or not to use system-level APIs to track the mouse's position.
+        If `True`, the mouse's position will be negative when outside the window.
+        """
 
     @property
     def position(self) -> Vector2:
@@ -298,27 +320,6 @@ class Mouse(InputManager):
 
     def set_cursor(self, cursor: CursorLike, /) -> None:
         pygame.mouse.set_cursor(Cursor.as_cursor(cursor))
-
-    def _setup_hooks(self) -> None:
-        self.on_mouse_button = Hook[[MouseButton, State]]()
-        """Executes whenever the state of any mouse button changes, including changes to `State.none`"""
-
-        self.on_mouse_button_pressed = Hook[[MouseButton]]()
-        """Executes whenever the state of any mouse button changes `State.pressed`"""
-
-        self.on_mouse_button_downed = Hook[[MouseButton]]()
-        """Executes whenever the state of any mouse button changes `State.downed`"""
-
-        self.on_mouse_button_released = Hook[[MouseButton]]()
-        """Executes whenever the state of any mouse button changes `State.released`"""
-
-        self.on_mouse_wheel = Hook[[Vector2]]()
-        """Executes whenever the mouse wheel is scrolled. Inputs on the x-axis happen when the wheel is scrolled while shift is being pressed."""
-
-        self.on_scroll = self.on_mouse_wheel  # alias
-
-        self.on_mouse_move = Hook()
-        """Executes whenever the mouse's velocity is different from zero."""
 
     def _get_pos(self) -> Vector2:
         return Vector2(
