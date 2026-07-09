@@ -36,7 +36,7 @@ __all__ = [
 class Component(ABC):
     """Base class for components."""
 
-    app: ClassVar[App]
+    app: ClassVar[App] = None  # pyright: ignore[reportAssignmentType]
 
     def __init_subclass__(cls, *, hot_reloadable: bool = False, **kwargs: Any) -> None:
         if hot_reloadable:
