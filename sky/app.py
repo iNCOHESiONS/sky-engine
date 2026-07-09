@@ -332,7 +332,7 @@ class App:
         mode: Literal["add", "replace_all", "replace_last"] = "add",
     ) -> None:
         """
-        Adds a scene to the app's scene list and starts it.\n
+        Adds a `Scene` to the app's scene list and starts it.\n
         If a type is passed, it will be instanced immediately with no arguments.
 
         Parameters
@@ -418,7 +418,7 @@ class App:
     def add_component(self, component: type[Component] | Component, /) -> Self:
         """
         Adds a component to the current `Scene`.\n
-        Calls the component's `start` method if it hasn't yet been started.
+        Calls the `Component`'s `start` method if it hasn't yet been started.
 
         Parameters
         ----------
@@ -442,7 +442,7 @@ class App:
     def add_components(self, /, *components: type[Component] | Component) -> Self:
         """
         Adds a component to the current `Scene`.\n
-        Calls the component's `start` method if it hasn't yet been started.
+        Calls the `Component`'s `start` method if it hasn't yet been started.
 
         Parameters
         ----------
@@ -467,7 +467,7 @@ class App:
 
     def remove_component(self, component: type[Component] | Component, /) -> None:
         """
-        Removes a component from any of the currently active `Scene`s.
+        Removes a `Component` from any of the currently active `Scene`s.
 
         Parameters
         ----------
@@ -492,7 +492,7 @@ class App:
 
     def remove_components(self, /, *components: Component) -> None:
         """
-        Removes all the listed components from any of the currently active `Scene`s, and calls their `stop` methods.
+        Removes all the listed `Component`s from any of the currently active `Scene`s, and calls their `stop` methods.
 
         Parameters
         ----------
@@ -510,7 +510,7 @@ class App:
 
     def clear_components(self, /, *, of_type: type[Component] | None = None) -> None:
         """
-        Removes all components from all the currently active `Scene`s, clearing the `App` completely.
+        Removes all `Component`s from all the currently active `Scene`s, clearing the `App` completely.
         If a type is passed, removes all components that match that type.
 
         Parameters
@@ -526,8 +526,8 @@ class App:
 
     def singleton_component[C: type[Component]](self, cls: C, /) -> C:
         """
-        Instantiates and adds the instance of the decorated `Component` to the current `Scene` immediately.\n
-        Also makes the decorated class a `Singleton`.
+        Similarly to `immediate_component`, instantiates and adds the instance of the decorated `Component` class
+        to the current `Scene` immediately, but also makes its class a singleton.
 
         Parameters
         ----------
@@ -544,7 +544,7 @@ class App:
 
     def immediate_component[C: type[Component]](self, cls: C, /) -> C:
         """
-        Instantiates and adds the instance of the decorated `Component` to the current `Scene` immediately.
+        Instantiates and adds the instance of the decorated `Component` class to the current `Scene` immediately.
 
         Parameters
         ----------
@@ -565,7 +565,7 @@ class App:
         self, /, *, of_type: type[T] | str
     ) -> T | None:
         """
-        Gets a matching component from any of the currently loaded `Scene`s.
+        Gets a matching `Component` from any of the currently loaded `Scene`s.
 
         Parameters
         ----------
@@ -584,7 +584,7 @@ class App:
         self, /, *, of_type: type[T] | str
     ) -> Sequence[T]:
         """
-        Gets a collection of matching components from all currently loaded scenes.
+        Gets a collection of matching `Component`s from all currently loaded scenes.
 
         Parameters
         ----------
@@ -603,7 +603,7 @@ class App:
         self, predicate: Callable[[Component], bool], /
     ) -> Iterable[Component]:
         """
-        Filters all currently loaded scenes for components that return `True` for the specified predicate.
+        Filters all currently loaded scenes for `Component`s that return `True` for the specified predicate.
 
         Parameters
         ----------
@@ -620,8 +620,8 @@ class App:
 
     def has_component(self, component: type[Component] | Component | str, /) -> bool:
         """
-        Checks if the `App` contains the specified component in any of its currently active `Scene`s.
-        If a type or type name is passed instead, checks if any of the currently active `Scene`s contain a component of a matching type.
+        Checks if the `App` contains the specified `Component` in any of its currently active `Scene`s.
+        If a type or type name is passed instead, checks if any of the currently active scenes contain a component of a matching type.
 
         Parameters
         ----------
@@ -642,7 +642,7 @@ class App:
 
     def add_service(self, service: Service, /) -> Self:
         """
-        Adds a service to the app.
+        Adds a `Service` to the app.
 
         Parameters
         ----------
@@ -668,7 +668,7 @@ class App:
 
     def remove_service(self, service: Service, /) -> Self:
         """
-        Removes a service from the app.
+        Removes a `Service` from the app.
 
         Parameters
         ----------
@@ -694,7 +694,7 @@ class App:
 
     def add_module(self, module: type[Module] | Module, /) -> None:
         """
-        Adds a module to the app, calling its `init` method immediately and scheduling its `quit` method to be called upon cleanup.
+        Adds a `Module` to the app, calling its `init` method immediately and scheduling its `quit` method to be called upon cleanup.
 
         Parameters
         ----------
@@ -718,7 +718,7 @@ class App:
 
     def remove_module(self, module: Module, /) -> None:
         """
-        Removes a module from cleanup, and immediately calls its `quit` method.
+        Removes a `Module` from cleanup, and immediately calls its `quit` method.
 
         Parameters
         ----------
