@@ -8,7 +8,7 @@ from .core import Component
 from .hook import Hook
 from .spec import SceneSpec
 from .types import Coroutine
-from .utils import filter_by_type, first, is_callable_with_no_arguments
+from .utils import attempt_empty_call, filter_by_type, first
 
 if TYPE_CHECKING:
     from .app import App
@@ -163,9 +163,6 @@ class Scene:
     def add_component(
         self,
         component: type[Component] | Component,
-        /,
-        *,
-        when: Hook | None = None,
     ) -> Self:
         """
         Adds a component to the `Scene`.\n
@@ -175,10 +172,6 @@ class Scene:
         ----------
         component: `type[Component] | Component`
             The component, or its `type`, to add. Will be instanced immediately if a `type` is passed.
-        when: `Hook | None`, optional
-            The `Hook` to use as a trigger for adding the component.
-            Will remove the callback from the `Hook` once the component has been added.\n
-            If `None` (the default), the component will be added immediately instead.
 
         Returns
         -------
@@ -191,28 +184,13 @@ class Scene:
             If a type is passed that cannot be instanced with no arguments.
         """
 
-        # `is_callable_with_no_arguments` for an immediate error instead of `attempt_empty_call`; better than erroring on `when`
-        if callable(component) and not is_callable_with_no_arguments(component):
-            raise ValueError(
-                f"{component.__name__} cannot be instanced with no arguments!"
+        if isinstance(component, type):
+            component = attempt_empty_call(
+                component,
+                err=f"Component {component.__name__} cannot be instanced without arguments!",
             )
 
-        def __add() -> None:
-            nonlocal when
-
-            self._components.append(
-                comp := component() if callable(component) else component
-            )
-
-            self._start_component(comp)
-
-            if when:
-                when -= __add
-
-        if when is None:
-            __add()
-        else:
-            when += __add
+        self._components.append(component)
 
         return self
 
