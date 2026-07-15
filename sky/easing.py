@@ -1,4 +1,4 @@
-"""Easing functions, provided by https://easings.net. See also: `sky.utils.animate`."""
+"""Easing functions, adapted from https://easings.net. Especially provided for use in `utils.animate`."""
 
 import math
 from typing import Callable, LiteralString
@@ -86,21 +86,22 @@ quint = quint_in_out  # alias
 
 
 def expo_in(t: float, /) -> float:
-    return 0.0 if t == 0.0 else math.pow(2.0, 10.0 * t - 10.0)
+    return 0.0 if t == 0 else math.pow(2.0, 10.0 * t - 10.0)
 
 
 def expo_out(t: float, /) -> float:
-    return 1.0 if t == 1.0 else 1.0 - math.pow(2.0, -10.0 * t)
+    return 1.0 if t == 1 else 1.0 - math.pow(2.0, -10.0 * t)
 
 
 def expo_in_out(t: float, /) -> float:
-    if t == 0.0 or t == 1.0:
-        return t
-
     return (
-        math.pow(2.0, 20.0 * t - 10.0) / 2.0
-        if t < 0.5
-        else (2.0 - math.pow(2.0, -20.0 * t + 10.0)) / 2.0
+        t
+        if t == 0 or t == 1
+        else (
+            math.pow(2.0, 20.0 * t - 10.0) / 2.0
+            if t < 0.5
+            else (2.0 - math.pow(2.0, -20.0 * t + 10.0)) / 2.0
+        )
     )
 
 
@@ -140,28 +141,31 @@ bounce = bounce_in_out
 
 
 def elastic_in(t: float, /) -> float:
-    if t == 0.0 or t == 1.0:
-        return t
-
-    c4 = (2.0 * math.pi) / 3.0
-
-    return -math.pow(2.0, 10.0 * t - 10.0) * math.sin((t * 10.0 - 10.75) * c4)
+    return (
+        t
+        if t == 0 or t == 1
+        else -math.pow(2.0, 10.0 * t - 10.0)
+        * math.sin((t * 10.0 - 10.75) * ((2.0 * math.pi) / 3.0))
+    )
 
 
 def elastic_out(t: float, /) -> float:
-    if t == 0.0 or t == 1.0:
-        return t
-
-    c4 = 2.0 * math.pi / 3.0
-
-    return math.pow(2.0, -10.0 * t) * math.sin((t * 10.0 - 0.75) * c4) + 1.0
+    return (
+        t
+        if t == 0 or t == 1
+        else (
+            math.pow(2.0, -10.0 * t)
+            * math.sin((t * 10.0 - 0.75) * (2.0 * math.pi / 3.0))
+            + 1.0
+        )
+    )
 
 
 def elastic_in_out(t: float, /) -> float:
-    c5 = (2.0 * math.pi) / 4.5
-
-    if t == 0.0 or t == 1.0:
+    if t == 0 or t == 1:
         return t
+
+    c5 = (2.0 * math.pi) / 4.5
 
     if t < 0.5:
         return (
