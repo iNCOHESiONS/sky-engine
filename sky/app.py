@@ -3,7 +3,7 @@
 from collections.abc import Iterable, Iterator, Sequence
 from cProfile import run as profile
 from itertools import chain as flatten
-from typing import Callable, Literal, Self
+from typing import Callable, Final, Literal, Self
 
 import pygame
 
@@ -23,9 +23,9 @@ __all__ = ["App"]
 @singleton
 class App:
     """
-    The singleton `App` class. Pre-execution configuration is defined with `AppSpec`, such as the main window's title and size.\n
-    User-defined `Component`s can be added by subclassing `Component` and using the `add_component` method on the `App` (which will add them to the main scene), or on a specific `Scene`.\n
-    Services can also be added by subclassing `Service` and using the `add_service` method.
+    The singleton `App` class. Pre-execution configuration is defined by `AppSpec`, such as main window configuration, main scene configuration and modules.\n
+    User-defined `Component`s can be added by subclassing `Component` and using the `add_component` method on `App` (which will add them to the main scene) or on a specific `Scene`.\n
+    Services, which control app-wide behavior, can also be added by subclassing `Service` and using the `add_service` method.
 
     # Order of execution:
         - Pre-loop:
@@ -33,7 +33,7 @@ class App:
             2. `Service.start` (for all services)
             3. `Scene.start` (for all scenes)
                 1. `Scene.pre_start`
-                2. `Component.start`
+                2. `Component.start` (for all components)
                 3. `Scene.post_start`
             4. `App.setup`
 
@@ -42,7 +42,7 @@ class App:
             2. `Service.update` (for all services)
             3. `Scene.update` (for all scenes)
                 1. `Scene.pre_update`
-                2. `Component.update`
+                2. `Component.update` (for all components)
                 3. `Scene.post_update`
             4. `App.post_update`
 
@@ -51,7 +51,7 @@ class App:
             2. `Service.stop` (for all services)
             3. `Scene.stop` (for all scenes)
                 1. `Scene.pre_stop`
-                2. `Component.stop`
+                2. `Component.stop` (for all components)
                 3. `Scene.post_stop`
             4. `App.cleanup`
 
@@ -60,12 +60,6 @@ class App:
         - `Windowing` (handles windowing)
         - `Chrono` (handles time-related data)
         - `Executor` (handles coroutines)
-
-    Constructor Parameters
-    ----------------------
-    spec: `AppSpec | WindowSpec | SceneSpec | None`, optional
-        Specification for the whole app, just the main scene, or just the main window.
-        By default `None`, which creates a default `AppSpec`. See `AppSpec` for more information.
     """
 
     def __init__(
@@ -80,8 +74,9 @@ class App:
         Parameters
         ----------
         spec: `AppSpec | WindowSpec | SceneSpec | None`, optional
-            Specification for the whole app, just the main scene, or just the main window.
-            By default `None`, which creates a default `AppSpec`. See `AppSpec` for more information.
+            The `App`'s, main `Window`'s, or main `Scene`'s specification.
+            `None` by default, which creates an `AppSpec` with no arguments.
+            See `AppSpec` for more information.
         """
 
         pygame.init()
@@ -89,17 +84,22 @@ class App:
         self._handle_references()
 
         self.is_running = False
+        """Whether the app is currently executing its mainloop."""
 
-        self.spec = (
+        self.spec: Final = (
             AppSpec(window_spec=spec)
             if isinstance(spec, WindowSpec)
             else AppSpec(scene_spec=spec)
             if isinstance(spec, SceneSpec)
             else spec or AppSpec()
         )
-        """The app's specification, i.e., pre-execution configuration."""
+        """The `App`'s specification, i.e., pre-execution configuration."""
+
+        self.debug: Final = self.spec.debug
+        """Whether the `App` is in debug mode. Currently does nothing internally."""
 
         self.logger = self.spec.logger
+        """The `App`'s logger."""
 
         self.on_preload = Hook()
         """Executes before scenes and services are started up, just after mainloop is called."""
@@ -154,7 +154,7 @@ class App:
     def __bool__(self) -> bool:
         return bool(self._scenes)
 
-    def __contains__(self, scene: Scene) -> bool:
+    def __contains__(self, scene: Scene, /) -> bool:
         return scene in self._scenes
 
     @property

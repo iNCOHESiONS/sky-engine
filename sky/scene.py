@@ -36,7 +36,7 @@ class Scene:
             - post_stop (after components are stopped)
     """
 
-    app: ClassVar[App] = None  # pyright: ignore[reportAssignmentType]
+    app: ClassVar[App]
 
     def __init__(self, /, *, spec: SceneSpec | None = None) -> None:
         self.spec = spec if isinstance(spec, SceneSpec) else SceneSpec()
@@ -60,14 +60,14 @@ class Scene:
         for base in self.__class__.__bases__:
             base.__init__(self)
 
-    def __contains__(self, component: type[Component] | Component, /) -> bool:
-        return self.has_component(component)
-
     def __iter__(self) -> Iterator[Component]:
         yield from self._components
 
     def __bool__(self) -> bool:
         return bool(self._components)
+
+    def __contains__(self, component: type[Component] | Component, /) -> bool:
+        return self.has_component(component)
 
     @final
     @property

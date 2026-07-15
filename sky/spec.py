@@ -1,7 +1,8 @@
-"""Specs, i.e. information necessary before the `App`'s execution."""
+"""Defines various specs, simple objects that hold the information necessary to create other objects within the library."""
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import KW_ONLY, dataclass, field
 from logging import getLogger
 from typing import Literal, Self, final
@@ -75,7 +76,7 @@ class WindowSpec:
     """The window's transparency key color. All pixels that match this color will be transparent instead. Windows only."""
 
     use_surface: bool = True
-    """Whether or not to call `get_surface` once the underlying window is created. Setting this to `False` is necessary to use pygame's new `_sdl2.video.Renderer` class."""
+    """Whether or not to call `get_surface` once the underlying `pygame.Window` is created. Setting this to `False` is necessary to use pygame's new `_sdl2.video.Renderer`, as it does not use `Surface`s."""
 
 
 @final
@@ -83,26 +84,30 @@ class WindowSpec:
 class SceneSpec:
     """Defines information necessary to create a scene."""
 
+    _: KW_ONLY
+
     components: list[Component] = field(default_factory=list)
-    """A list of components to add to the scene."""
+    """The components to add to the `Scene`."""
 
 
 @final
 @dataclass(slots=True, frozen=True)
 class AppSpec:
-    """Defines information the app needs to have before mainloop. If `window_spec` is None, a window will not be created (headless mode)."""
+    """Defines information necessary to create the app."""
 
     _: KW_ONLY
 
     window_spec: WindowSpec | None = field(default_factory=WindowSpec)
-    """The main window's `WindowSpec`"""
+    """The default `Window`'s spec. If `None`, will not create a window (headless mode;)."""
 
     scene_spec: SceneSpec | None = field(default_factory=SceneSpec)
-    """The default scene to add to the app. If `None`, will not create a default scene."""
+    """The default `Scene`'s spec. If `None`, will not create a default scene."""
 
-    modules: list[type[Module] | Module] = field(default_factory=list)
+    modules: Sequence[type[Module] | Module] = field(
+        default_factory=list[type[Module] | Module]
+    )
     """
-    A list of modules (or module types) whose lifetime is to be handled by the `App`.
+    A sequence of modules (or module types) whose lifetime is to be handled by the `App`.
     For that purpose, each module must have an `init` and `quit` method, per the `Module` `Protocol`.
     """
 
@@ -112,9 +117,11 @@ class AppSpec:
     By default, uses an unmodified, unnamed logger returned by `getLogger` from the built-in `logging` module.
     """
 
-    # general debugging flag that currently does nothing internally
     debug: bool = False
-    """Whether to enable debugging."""
+    """
+    Whether the `App` is in debug mode.
+    Currently does nothing internally, but one may use this as a marker to distinguish between production and development builds.
+    """
 
     profile: bool = False
     """Whether to enable profiling (using `cProfile`)."""

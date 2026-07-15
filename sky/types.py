@@ -1,4 +1,7 @@
-"""Core engine types."""
+"""
+Core engine types.
+Also re-exports some `pygame` classes with different names, as the engine has its own wrappers around those types.
+"""
 
 from collections.abc import Generator
 from typing import TYPE_CHECKING, Literal

@@ -36,7 +36,7 @@ __all__ = [
 class Component(ABC):
     """Base class for components."""
 
-    app: ClassVar[App] = None  # pyright: ignore[reportAssignmentType]
+    app: ClassVar[App]
 
     def __init_subclass__(cls, *, hot_reloadable: bool = False, **kwargs: Any) -> None:
         if hot_reloadable:
@@ -90,10 +90,11 @@ class InputManager(ABC):
 class Module(Protocol):
     """
     A protocol class describing modules, objects whose lifetime is handled by the `App`.
-    Modules are added via the `modules` argument in `AppSpec`, or the `add_module` method.\n
+    Requires `init` and `quit` methods that each take no arguments.\n
+
+    Modules are added via the `modules` argument in `AppSpec`, or the `add_module` method in `App`.
     Useful for loading `pygame` modules such as `freetype` and `mixer`, but one may create their own.
-    See the `modules` folder for examples.\n
-    Requires `init` and `quit` methods that each take no arguments.
+    See `utils.make_module` for more information on how to easily create simple modules, and the `modules` folder for more involved examples.
     """
 
     def init(self) -> None: ...
