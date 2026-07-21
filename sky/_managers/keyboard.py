@@ -1,18 +1,22 @@
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
-from typing import TYPE_CHECKING, Callable, Literal, final, override
+from itertools import starmap
+from typing import TYPE_CHECKING, final, override
 
 import pygame
+
 from pygame.constants import KEYDOWN, KEYUP
 
-from ..core import InputManager, Key, Keybinding, State
-from ..hook import Hook
-from ..types import KeyLike, StateLike
-from ..utils import Vector2, Vector3
+from sky.core import InputManager, Key, Keybinding, State
+from sky.hook import Hook
+from sky.utils import Vector2
+
 
 if TYPE_CHECKING:
-    from ..window import Window
+    from collections.abc import Callable, Mapping, Sequence
+
+    from sky.types import KeyLike, StateLike
+    from sky.window import Window
 
 __all__ = ["Keyboard"]
 
@@ -46,7 +50,7 @@ class Keyboard(InputManager):
     def states(self) -> Mapping[Key, State]:
         """The current state of all keys listed in the `Key` enum."""
 
-        return {Key(id): state for id, state in self._states.items()}
+        return {Key(id_): state for id_, state in self._states.items()}
 
     @property
     def text(self) -> str:
@@ -68,20 +72,12 @@ class Keyboard(InputManager):
 
     @override
     def update(self) -> None:
-        downed: set[int] = set(
-            e.key for e in self.app.events.get_many(KEYDOWN) if self._window == e.window
-        )
-        released: set[int] = set(
-            e.key for e in self.app.events.get_many(KEYUP) if self._window == e.window
-        )
+        downed: set[int] = {e.key for e in self.app.events.get_many(KEYDOWN) if self._window == e.window}
+        released: set[int] = {e.key for e in self.app.events.get_many(KEYUP) if self._window == e.window}
 
         for key, state in self._states.items():
             self._states[key] = (
-                State.pressed
-                if state is State.downed
-                else State.none
-                if state is State.released
-                else state
+                State.pressed if state is State.downed else State.none if state is State.released else state
             )
 
             if key in downed:
@@ -98,11 +94,7 @@ class Keyboard(InputManager):
             if state != State.none:
                 self.on_key.notify(Key(key), new_state)
 
-        self._text = "".join(
-            e.unicode
-            for e in self.app.events.get_many(pygame.KEYDOWN)
-            if self._window == e.window
-        )
+        self._text = "".join(e.unicode for e in self.app.events.get_many(pygame.KEYDOWN) if self._window == e.window)
 
         previously_active_keybindings = self._active_keybindings.copy()
 
@@ -149,6 +141,7 @@ class Keyboard(InputManager):
     def is_state(self, key: KeyLike, state: StateLike, /) -> bool:
         """
         Checks if a key is in a certain state.
+
         State can be State.none to check if the key is not being interacted with at all.\n
         Equivalent to `self.get_state(key) == state`.
 
@@ -233,7 +226,7 @@ class Keyboard(InputManager):
             Whether the keybinding is active.
         """
 
-        return all(self.is_state(key, state) for key, state in keybinding)
+        return all(starmap(self.is_state, keybinding))
 
     def is_inactive(self, keybinding: Keybinding, /) -> bool:
         """
@@ -260,7 +253,8 @@ class Keyboard(InputManager):
         ----------
         state: `StateLike`
             The state to check for.
-            If no state is specified, checks if any key is being interacted with at all, i.e. in any state except `State.none`.
+            If no state is specified, checks if any key is being interacted with at all, i.e. in any state except
+            `State.none`.
 
         Returns
         -------
@@ -271,9 +265,7 @@ class Keyboard(InputManager):
         state = State.convert(state)
 
         return any(
-            self.get_state(key) == state
-            if state != State.none
-            else self.get_state(key) != State.none
+            self.get_state(key) == state if state != State.none else self.get_state(key) != State.none
             for key in self._states
         )
 
@@ -293,16 +285,16 @@ class Keyboard(InputManager):
         """
         Utility method to easily add many keybindings using keyword arguments.
 
+        Parameters
+        ----------
+        **kwargs: `Callable[[], None]`
+            A mapping of KeyLiteral to action.
+
         Examples
         --------
         ```python
         app.keyboard.add_keybindings(escape=app.quit, f11=app.window.toggle_fullscreen)
         ```
-
-        Parameters
-        ----------
-        **kwargs: `Callable[[], None]`
-            A mapping of KeyLiteral to action.
         """
 
         for key, action in kwargs.items():
@@ -325,9 +317,7 @@ class Keyboard(InputManager):
 
         self._keybindings.remove(keybinding)
 
-    def get_axis(
-        self, neg: KeyLike, pos: KeyLike, /, *, state: StateLike = State.pressed
-    ) -> float:
+    def get_axis(self, neg: KeyLike, pos: KeyLike, /, *, state: StateLike = State.pressed) -> float:
         """
         Gets the axis value of a key.
 

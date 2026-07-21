@@ -2,6 +2,7 @@ from typing import override
 
 from sky import App, Service
 
+
 app = App()
 
 

@@ -3,6 +3,7 @@ from pygame import draw
 from sky import App, Hook, WindowSpec
 from sky.colors import ALICE_BLUE, CRIMSON
 
+
 app = App(spec=WindowSpec(fill=CRIMSON))
 
 

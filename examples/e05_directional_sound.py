@@ -1,11 +1,13 @@
 from math import tau
 
 import numpy as np
+
 from pygame import draw, mixer
 
 from sky import App, AppSpec, Coroutine, WaitForSeconds, WindowSpec
 from sky.colors import ALICE_BLUE, CRIMSON
 from sky.utils import clamp01
+
 
 app = App(
     spec=AppSpec(
@@ -26,9 +28,7 @@ def generate_tone(
     amplitude = (2**15 - 1) * volume
 
     samples = amplitude * np.sin(
-        tau
-        * frequency
-        * np.linspace(0, duration, int(sample_rate * duration), endpoint=False)
+        tau * frequency * np.linspace(0, duration, int(sample_rate * duration), endpoint=False)
     )
 
     return mixer.Sound(buffer=samples.astype(np.int16))

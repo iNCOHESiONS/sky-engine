@@ -19,6 +19,7 @@ from sky.colors import CRIMSON, WHITE
 from sky.easing import bounce_out, cubic_in_out, ease_in_out, linear, quint_in_out
 from sky.utils import animate
 
+
 app = App(
     spec=AppSpec(
         window_spec=WindowSpec(fill=Color("#111113")),
@@ -46,9 +47,7 @@ class Circle(Component):
     def update(self) -> None:
         render.aacircle(app.window.surface, CRIMSON, self.position, 32)
 
-        surface, rect = font.render(
-            self.easing.__name__, WHITE, style=freetype.STYLE_STRONG
-        )
+        surface, rect = font.render(self.easing.__name__, WHITE, style=freetype.STYLE_STRONG)
         rect.center = self.position
         app.window.blit(surface, rect)
 
@@ -57,18 +56,14 @@ class Circle(Component):
             start = self._start
             end = start.with_x(app.window.width - start.x)
 
-            for t in animate(
-                duration=2, easing=self.easing, step=lambda: app.chrono.deltatime
-            ):
+            for t in animate(duration=2, easing=self.easing, step=lambda: app.chrono.deltatime):
                 self.position = start.lerp(end, t)
                 yield None
 
             yield WaitForSeconds(1)
 
 
-for i, easing in enumerate(
-    (linear, cubic_in_out, quint_in_out, ease_in_out, bounce_out)
-):
+for i, easing in enumerate((linear, cubic_in_out, quint_in_out, ease_in_out, bounce_out)):
     app.add_component(Circle(easing, Vector2(100, 60 + 120 * i)))
 
 app.mainloop()

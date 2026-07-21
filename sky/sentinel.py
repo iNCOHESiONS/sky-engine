@@ -3,14 +3,21 @@
 from __future__ import annotations
 
 import inspect
-from types import UnionType
+
 from typing import (
+    TYPE_CHECKING,
+    Any,
     LiteralString,
+    NoReturn,
     Self,
     Union,  # pyright: ignore[reportDeprecated]
     final,
     override,
 )
+
+
+if TYPE_CHECKING:
+    from types import UnionType
 
 _sentinels: dict[str, Sentinel] = {}
 
@@ -45,18 +52,18 @@ class Sentinel:
         repr: str | None = None,
     ) -> Sentinel:
         module = module_name or _get_calling_module_name()
-        id = f"{module}-{name}"
+        id_ = f"{module}-{name}"
 
-        if cached := _sentinels.get(id, None):
+        if cached := _sentinels.get(id_):
             return cached
 
         sentinel = super().__new__(cls)
-        sentinel._id = id
+        sentinel._id = id_
         sentinel._repr = repr or f'{cls.__name__}("{name}", module_name="{module}")'
 
-        return _sentinels.setdefault(id, sentinel)
+        return _sentinels.setdefault(id_, sentinel)
 
-    def __init_subclass__(cls):
+    def __init_subclass__(cls) -> NoReturn:
         raise TypeError("Sentinel cannot be used as a subclass")
 
     @override
@@ -70,14 +77,14 @@ class Sentinel:
     def __copy__(self) -> Self:
         return self
 
-    def __deepcopy__(self, _) -> Self:
+    def __deepcopy__(self, _: Any) -> Self:
         return self
 
     def __or__(self, other: Self, /) -> UnionType:
-        return Union[self, other]  # pyright: ignore[reportDeprecated]
+        return Union[self, other]  # pyright: ignore[reportDeprecated]  # ruff: ignore[non-pep604-annotation-union]
 
     def __ror__(self, other: Self, /) -> UnionType:
-        return Union[other, self]  # pyright: ignore[reportDeprecated]
+        return Union[other, self]  # pyright: ignore[reportDeprecated]  # ruff: ignore[non-pep604-annotation-union]
 
     @property
     def name(self) -> str:

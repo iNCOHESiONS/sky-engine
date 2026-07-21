@@ -52,7 +52,69 @@ pywin32 = [
 ]
 screeninfo = "^0.8.1"
 singleton-decorator = "==1.0.0"
-watchdog = "6.0.0"
+watchdog = "6.0.0"  # for hcr and live reloading modules
+
+
+[tool.ruff]
+preview = true
+line-length = 120
+
+[tool.ruff.lint]
+exclude = ["examples/**", "*_test.py"]
+select = ["ALL"]
+extend-select = [
+    "C4",
+    "E",
+    "F",
+    "FURB",
+    "I",
+    "ICN",
+    "ISC",
+    "NPY",
+    "PTH",
+    "RET",
+    "SIM",
+    "TC",
+    "TD",
+    "TID",
+    "UP",
+    "W",
+]
+ignore = [
+    "any-type",
+    "blank-line-after-function",
+    "docstring-extraneous-exception",
+    "docstring-missing-exception",
+    "docstring-starts-with-this",
+    "empty-method-without-abstract-decorator",
+    "error-instead-of-exception",
+    "escape-sequence-in-docstring",
+    "f-string-in-exception",
+    "incorrect-blank-line-before-class",
+    "invalid-todo-tag",
+    "line-contains-fixme",
+    "logging-f-string",
+    "missing-blank-line-after-last-section",
+    "missing-copyright-notice",
+    "missing-todo-author",
+    "missing-todo-link",
+    "multi-line-summary-first-line",
+    "no-self-use",
+    "non-empty-init-module",
+    "non-imperative-mood",
+    "overload-with-docstring",
+    "raise-vanilla-args",
+    "raise-vanilla-args",
+    "raw-string-in-exception",
+    "suspicious-non-cryptographic-random-usage",
+    "too-many-public-methods",
+    "undocumented-magic-method",
+    "undocumented-public-init",
+]
+
+[tool.ruff.lint.isort]
+lines-between-types = 1
+lines-after-imports = 2
 
 [tool.ruff.format]
 docstring-code-format = true

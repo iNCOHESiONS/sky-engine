@@ -1,10 +1,15 @@
 from inspect import isgeneratorfunction
-from typing import Callable, Self, final, override
+from typing import TYPE_CHECKING, Self, final, override
 
-from ..core import Service
-from ..types import Coroutine
-from ..utils import attempt_empty_call
-from ..yieldable import WaitForFrames, WaitUntil, Yieldable
+from sky.core import Service
+from sky.utils import attempt_empty_call
+from sky.yieldable import WaitForFrames, WaitUntil, Yieldable
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from sky.types import Coroutine
 
 
 @final
@@ -29,9 +34,7 @@ class Executor(Service):
     def stop(self) -> None:
         self.stop_all_coroutines()
 
-    def start_coroutine(
-        self, coroutine: Callable[[], Coroutine] | Coroutine, /
-    ) -> Coroutine:
+    def start_coroutine(self, coroutine: Callable[[], Coroutine] | Coroutine, /) -> Coroutine:
         """
         Starts a `Coroutine`.
 

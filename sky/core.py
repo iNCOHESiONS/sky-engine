@@ -3,20 +3,23 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterator
 from dataclasses import KW_ONLY, dataclass, field
 from enum import Enum, IntEnum, auto, unique
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Protocol, Self, final
+from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self, final
 
 import pygame
-from screeninfo import Monitor as ScreenInfoMonitor
 
 from .hook import Hook
-from .types import Coroutine, CursorLike, KeyLike, ModifierLike, StateLike
 from .utils import Rect, Vector2
 
+
 if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator
+
+    from screeninfo import Monitor as ScreenInfoMonitor
+
     from .app import App
+    from .types import Coroutine, CursorLike, KeyLike, ModifierLike, StateLike
     from .window import Window
 
 __all__ = [
@@ -33,10 +36,10 @@ __all__ = [
 ]
 
 
-class Component(ABC):
+class Component(ABC):  # ruff: ignore[abstract-base-class-without-abstract-method]
     """Base class for components."""
 
-    app: ClassVar[App]
+    app: ClassVar[App] = None  # pyright: ignore[reportAssignmentType]
 
     def __init_subclass__(cls, *, hot_reloadable: bool = False, **kwargs: Any) -> None:
         if hot_reloadable:
@@ -47,18 +50,21 @@ class Component(ABC):
     def start(self) -> Coroutine | None:
         """
         Runs before the first frame, after `entrypoint` and before `setup`. Can be a Coroutine.
+
         Called by the engine; should not be called by the user.
         """
 
     def update(self) -> None:
         """
         Runs every frame, after `pre_update` and before `post_update`.
+
         Called by the engine; should not be called by the user.
         """
 
     def stop(self) -> None:
         """
         Runs after the last frame, after `teardown` and before `cleanup`.
+
         Called by the engine; should not be called by the user.
         """
 
@@ -70,14 +76,14 @@ class Service(Component, ABC):
 class InputManager(ABC):
     """Base class for per-window input managers."""
 
-    app: ClassVar[App]
+    app: ClassVar[App] = None  # pyright: ignore[reportAssignmentType]
 
     def __init__(self, window: Window, /) -> None:
         self._window = window
 
     @abstractmethod
     def update(self) -> None:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @final
     @property
@@ -90,28 +96,36 @@ class InputManager(ABC):
 class Module(Protocol):
     """
     A protocol class describing modules, objects whose lifetime is handled by the `App`.
-    Requires `init` and `quit` methods that each take no arguments.\n
+
+    Requires `init` and `quit` methods that each take no arguments.
 
     Modules are added via the `modules` argument in `AppSpec`, or the `add_module` method in `App`.
     Useful for loading `pygame` modules such as `freetype` and `mixer`, but one may create their own.
-    See `utils.make_module` for more information on how to easily create simple modules, and the `modules` folder for more involved examples.
+    See `utils.make_module` for more information on how to easily create simple modules,
+    and the `modules` folder for more involved examples.
     """
 
-    def init(self) -> None: ...
+    def init(self) -> None:
+        """Initializes this module."""
 
-    def quit(self) -> None: ...
+    def quit(self) -> None:
+        """Stops this module."""
 
 
 class Logger(Protocol):
     """A protocol class describing a simple format loggers must follow to be used in `App`."""
 
-    def debug(self, msg: str) -> None: ...
+    def debug(self, msg: str) -> None:
+        """Logs a message with DEBUG level."""
 
-    def info(self, msg: str) -> None: ...
+    def info(self, msg: str) -> None:
+        """Logs a message with INFO level."""
 
-    def warning(self, msg: str) -> None: ...
+    def warning(self, msg: str) -> None:
+        """Logs a message with WARNING/WARN level."""
 
-    def error(self, msg: str) -> None: ...
+    def error(self, msg: str) -> None:
+        """Logs a message with ERROR level."""
 
 
 @final
@@ -127,19 +141,32 @@ class Monitor:
 
     @property
     def width(self) -> int:
+        """The width of the `Monitor`."""
+
         return int(self.size.x)
 
     @property
     def height(self) -> int:
+        """The height of the `Monitor`."""
+
         return int(self.size.y)
 
     @property
     def rect(self) -> Rect:
+        """A `Rect` matching this `Monitor`'s size."""
+
         return Rect((0, 0, *self.size))
 
     @classmethod
     def from_monitor(cls, monitor: ScreenInfoMonitor, /, *, index: int) -> Self:
-        """Creates a `Monitor` object from a `screeninfo.Monitor` object."""
+        """
+        Creates a `Monitor` object from a `screeninfo.Monitor` object.
+
+        Returns
+        -------
+        `Self`
+            The created `Monitor`.
+        """
 
         return cls(
             monitor.name or "Unnamed Monitor",
@@ -151,7 +178,11 @@ class Monitor:
 
     @property
     def refresh_rate(self) -> int:
-        """The refresh rate of the monitor. Returns -1 if pygame's video system hasn't been initialized (i.e. `pygame.init()` hasn't been called)."""
+        """
+        The `Monitor`'s refresh rate.
+
+        Returns -1 if pygame's video system hasn't been initialized (i.e. `pygame.init()` hasn't been called).
+        """
 
         try:
             return pygame.display.get_desktop_refresh_rates()[self.index]
@@ -167,6 +198,7 @@ class _InputEnum(IntEnum):
     def convert(cls, value: Self | str | int, /) -> Self:
         """
         Converts a `str` or an `int` to their equilavent `Enum` instances.
+
         If the value happens to already be an `Enum`, simply return it, ensuring
         that all valid values passed into this classmethod return an `Enum` instance.
 
@@ -346,7 +378,7 @@ class Key(_InputEnum):
     i = pygame.K_i
     j = pygame.K_j
     k = pygame.K_k
-    l = pygame.K_l  # noqa: E741
+    l = pygame.K_l  # ruff: ignore[ambiguous-variable-name]
     m = pygame.K_m
     n = pygame.K_n
     o = pygame.K_o
@@ -364,7 +396,7 @@ class Key(_InputEnum):
 
     pre_accent = 180  # keycode for before an accent is inputted
     tilde = 126
-    ç = 231
+    ç = 231  # ruff: ignore[non-ascii-name]
 
     enter = return_  # alias
     _ = underscore  # alias
@@ -405,8 +437,10 @@ class Modifier(IntEnum):
     @classmethod
     def convert(cls, value: ModifierLike, /) -> Self:
         """
-        Converts a `ModifierLike` value to a Modifier.\n
-        `Key`s, `Modifier`s, `Modifier` names and key values from `pygame.locals` such as `pygame.K_LSHIFT` or modifier values such as `pygame.KMOD_LSHIFT` can be used.
+        Converts a `ModifierLike` value to a `Modifier`.
+
+        `Key`s, `Modifier`s, `Modifier` names and key values from `pygame.locals` such as `pygame.K_LSHIFT` or modifier
+        values such as `pygame.KMOD_LSHIFT` can be used.
 
         Parameters
         ----------
@@ -440,8 +474,10 @@ class Modifier(IntEnum):
 @unique
 class State(Enum):
     """
-    State of a key or button.\n
-    Do not confuse `State.pressed` with `State.downed`. `State.pressed` means the key has been pressed for one or more frames, while `State.downed` means the key has just been pressed.
+    State of a key or button.
+
+    Do not confuse `State.pressed` with `State.downed`. `State.pressed` means the key has been pressed for one or more
+    frames, while `State.downed` means the key has just been pressed.
     """
 
     pressed = auto()
@@ -456,12 +492,12 @@ class State(Enum):
 
         Parameters
         ----------
-            pressed: `bool`
-                Whether the key is currently pressed.
-            released: `bool`
-                Whether the key has been released.
-            down: `bool`
-                Whether the key is currently down.
+        pressed: `bool`
+            Whether the key is currently pressed.
+        released: `bool`
+            Whether the key has been released.
+        down: `bool`
+            Whether the key is currently down.
 
         Returns
         -------
@@ -478,6 +514,28 @@ class State(Enum):
 
     @classmethod
     def convert(cls, value: StateLike, /) -> Self:
+        """
+        Converts a `StateLike` (i.e. `State`s or `StateLiteral`s such as "downed" or "pressed") value to a `State`.
+
+        Parameters
+        ----------
+        value: `ModifierLike`
+            The value to convert.
+
+        Returns
+        -------
+        `Modifier`
+            The converted modifier.
+
+        Raises
+        ------
+        `ValueError`
+            If the value is not among the values defined.
+
+        `KeyError`
+            If the value is not among the keys defined.
+        """
+
         return cls[value] if isinstance(value, str) else value  # pyright: ignore[reportReturnType]
 
 
@@ -586,6 +644,6 @@ class Cursor(Enum):
                 if isinstance(value, int)
                 else Cursor[value.lower()].value
                 if isinstance(value, str)
-                else value.value
+                else value.value,
             )
         )

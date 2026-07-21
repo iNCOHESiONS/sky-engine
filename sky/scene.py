@@ -1,17 +1,20 @@
 """Contains the `Scene` class, used for managing components."""
 
-from collections.abc import Iterable, Iterator, Sequence
 from inspect import isgeneratorfunction
-from typing import TYPE_CHECKING, Callable, ClassVar, Self, final
+from typing import TYPE_CHECKING, final
 
 from .core import Component
 from .hook import Hook
 from .spec import SceneSpec
-from .types import Coroutine
 from .utils import attempt_empty_call, filter_by_type, first
 
+
 if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable, Iterator, Sequence
+    from typing import ClassVar, Self
+
     from .app import App
+    from .types import Coroutine
 
 
 __all__ = ["Scene"]
@@ -19,8 +22,10 @@ __all__ = ["Scene"]
 
 class Scene:
     """
-    A collection of `Component`s for ease of management.\n
-    Note that `Scene`s can be started and stopped multiple times, and their `start` and `stop` methods will be called each time.
+    A collection of `Component`s for ease of management.
+
+    Note that `Scene`s can be started and stopped multiple times, and their `start` and `stop` methods will be called
+    each time.
 
     Hooks:
         - Pre-loop
@@ -72,7 +77,7 @@ class Scene:
     @final
     @property
     def components(self) -> Sequence[Component]:
-        """Returns a sequence of all components in this `Scene`."""
+        """All components in this `Scene`."""
 
         return self._components.copy()
 
@@ -165,8 +170,7 @@ class Scene:
         component: type[Component] | Component,
     ) -> Self:
         """
-        Adds a component to the `Scene`.\n
-        Calls the component's `start` method if it hasn't yet been started.
+        Adds a component to the `Scene`. Calls the component's `start` method if it hasn't yet been started.
 
         Parameters
         ----------
@@ -211,7 +215,8 @@ class Scene:
         Raises
         ------
         `ValueError`
-            If a type is passed that cannot be instanced with no arguments or if the `Scene` has already stopped running.
+            If a type is passed that cannot be instanced with no arguments,
+            or if the `Scene` has already stopped running.
         """
 
         for component in components:
@@ -226,7 +231,8 @@ class Scene:
         Parameters
         ----------
         component: `type[Component] | Component`
-            The component, or its type, to remove. Will try and find a component of matching type if a type is passed. That type will not be instanced.
+            The component, or its type, to remove. Will try and find a component of matching type if a type is passed.
+            That type will not be instanced.
 
         Raises
         ------
@@ -234,11 +240,7 @@ class Scene:
             If the component wasn't found.
         """
 
-        comp = (
-            self.get_component(of_type=component)
-            if isinstance(component, type)
-            else component
-        )
+        comp = self.get_component(of_type=component) if isinstance(component, type) else component
 
         if comp is None:
             raise ValueError("Component not found.")
@@ -273,16 +275,13 @@ class Scene:
         Parameters
         ----------
         of_type: `type[Component] | None`
-            The component type to remove. If `None`, the default, is passed, all components will be removed from the `Scene`.
+            The component type to remove.
+            If `None`, the default, is passed, all components will be removed from the `Scene`.
         """
 
-        self.remove_components(
-            *(self.get_components(of_type=of_type) if of_type else self._components)
-        )
+        self.remove_components(*(self.get_components(of_type=of_type) if of_type else self._components))
 
-    def get_component[T: Component = Component](
-        self, /, *, of_type: type[T] | str
-    ) -> T | None:
+    def get_component[T: Component = Component](self, /, *, of_type: type[T] | str) -> T | None:
         """
         Gets a matching component from the `Scene`.
 
@@ -299,9 +298,7 @@ class Scene:
 
         return first(self.get_components(of_type=of_type))
 
-    def get_components[T: Component = Component](
-        self, /, *, of_type: type[T] | str
-    ) -> Sequence[T]:
+    def get_components[T: Component = Component](self, /, *, of_type: type[T] | str) -> Sequence[T]:
         """
         Gets a collection of matching components from the `Scene`.
 
@@ -318,9 +315,7 @@ class Scene:
 
         return list(filter_by_type(self._components, of_type))
 
-    def filter_components(
-        self, predicate: Callable[[Component], bool], /
-    ) -> Iterable[Component]:
+    def filter_components(self, predicate: Callable[[Component], bool], /) -> Iterable[Component]:
         """
         Filters this `Scene` for components that pass the specified predicate.
 
@@ -340,6 +335,7 @@ class Scene:
     def has_component(self, component: type[Component] | Component | str, /) -> bool:
         """
         Checks if the `Scene` contains the specified component.
+
         If a type or type name is passed instead, checks if the `Scene` contains a component of a matching type.
 
         Parameters
@@ -365,12 +361,10 @@ class Scene:
             return
 
         self._handle_possible_coroutine(component.start)
-        component._has_started = True  # pyright: ignore[reportAttributeAccessIssue]
+        component._has_started = True  # pyright: ignore[reportAttributeAccessIssue]  # ruff: ignore[private-member-access]
 
     @final
-    def _handle_possible_coroutine(
-        self, func: Callable[[], Coroutine | None], /
-    ) -> None:
+    def _handle_possible_coroutine(self, func: Callable[[], Coroutine | None], /) -> None:
         if isgeneratorfunction(func):
             self.app.executor.start_coroutine(func)
         else:

@@ -6,6 +6,7 @@ from pygame import draw
 from sky import App, Component, Vector2, WindowSpec
 from sky.colors import ALICE_BLUE, CRIMSON
 
+
 app = App(spec=WindowSpec(fill=CRIMSON))
 
 

@@ -4,6 +4,7 @@ from sky import App, Coroutine
 from sky.colors import CRIMSON, DODGER_BLUE
 from sky.utils import Color, animate
 
+
 app = App()
 
 

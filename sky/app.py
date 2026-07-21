@@ -1,21 +1,26 @@
 """Contains the `App` class."""
 
-from collections.abc import Iterable, Iterator, Sequence
 from cProfile import run as profile
 from itertools import chain as flatten
-from typing import Callable, Final, Literal, Self
+from typing import TYPE_CHECKING, Final, Literal, Self
 
 import pygame
 
-from ._managers import Keyboard, Mouse
 from ._services import Chrono, Events, Executor, Windowing
 from .core import Component, InputManager, Module, Monitor, Service
 from .hook import Hook
 from .scene import Scene
 from .spec import AppSpec, SceneSpec, WindowSpec
 from .utils import attempt_empty_call, filter_by_type, filterl, first, singleton
-from .window import Window
 from .yieldable import Yieldable
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable, Iterator, Sequence
+
+    from ._managers import Keyboard, Mouse
+    from .window import Window
+
 
 __all__ = ["App"]
 
@@ -23,9 +28,16 @@ __all__ = ["App"]
 @singleton
 class App:
     """
-    The singleton `App` class. Pre-execution configuration is defined by `AppSpec`, such as main window configuration, main scene configuration and modules.\n
-    User-defined `Component`s can be added by subclassing `Component` and using the `add_component` method on `App` (which will add them to the main scene) or on a specific `Scene`.\n
-    Services, which control app-wide behavior, can also be added by subclassing `Service` and using the `add_service` method.
+    The singleton `App` class.
+
+    Pre-execution configuration is defined by `AppSpec`, such as main window configuration, main scene configuration and
+    modules.
+
+    User-defined `Component`s can be added by subclassing `Component` and using the `add_component` method on `App`
+    (which will add them to the main scene) or on a specific `Scene`.
+
+    Services, which control app-wide behavior, can also be added by subclassing `Service` and using the `add_service`
+    method.
 
     # Order of execution:
         - Pre-loop:
@@ -117,7 +129,9 @@ class App:
         """Executes before scenes and services are stopped, and after the last frame."""
 
         self.on_cleanup = Hook()
-        """Executes after scenes and services are stopped, and before the app is destroyed; cleans up registered modules."""
+        """
+        Executes after scenes and services are stopped, and before the app is destroyed; cleans up registered modules.
+        """
 
         for module in self.spec.modules:
             self.add_module(module)
@@ -200,7 +214,8 @@ class App:
     @property
     def window(self) -> Window:
         """
-        Shorthand for `app.windowing.main_window`.\n
+        Shorthand for `app.windowing.main_window`.
+
         Instead of being optional, this property raises an exception in case there's no main window, for ease of use.
 
         Returns
@@ -215,9 +230,7 @@ class App:
         """
 
         if self.windowing.main_window is None:
-            raise ValueError(
-                "The app is in headless mode, and as such, has no windows."
-            )
+            raise ValueError("The app is in headless mode, and as such, has no windows.")
 
         return self.windowing.main_window
 
@@ -332,7 +345,8 @@ class App:
         mode: Literal["add", "replace_all", "replace_last"] = "add",
     ) -> None:
         """
-        Adds a `Scene` to the app's scene list and starts it.\n
+        Adds a `Scene` to the app's scene list and starts it.
+
         If a type is passed, it will be instanced immediately with no arguments.
 
         Parameters
@@ -417,7 +431,8 @@ class App:
 
     def add_component(self, component: type[Component] | Component, /) -> Self:
         """
-        Adds a component to the current `Scene`.\n
+        Adds a component to the current `Scene`.
+
         Calls the `Component`'s `start` method if it hasn't yet been started.
 
         Parameters
@@ -441,7 +456,8 @@ class App:
 
     def add_components(self, /, *components: type[Component] | Component) -> Self:
         """
-        Adds a component to the current `Scene`.\n
+        Adds a component to the current `Scene`.
+
         Calls the `Component`'s `start` method if it hasn't yet been started.
 
         Parameters
@@ -458,7 +474,7 @@ class App:
         ------
         `ValueError`
             If a type is passed that cannot be instanced with no arguments or if the `Scene` has already stopped running.
-        """
+        """  # ruff: ignore[line-too-long]
 
         for component in components:
             self.add_component(component)
@@ -472,7 +488,8 @@ class App:
         Parameters
         ----------
         component: `type[Component] | Component`
-            The component, or its type, to remove. Will try and find a component of matching type if a type is passed. That type will not be instanced.
+            The component, or its type, to remove. Will try and find a component of matching type if a type is passed.
+            That type will not be instanced.
 
         Raises
         ------
@@ -483,9 +500,7 @@ class App:
         scenes = filterl(lambda scene: component in scene, self.scenes)
 
         if all(component not in scene for scene in scenes):
-            raise ValueError(
-                "Component not found in any of the currently active scenes."
-            )
+            raise ValueError("Component not found in any of the currently active scenes.")
 
         for scene in scenes:
             scene.remove_component(component)
@@ -511,6 +526,7 @@ class App:
     def clear_components(self, /, *, of_type: type[Component] | None = None) -> None:
         """
         Removes all `Component`s from all the currently active `Scene`s, clearing the `App` completely.
+
         If a type is passed, removes all components that match that type.
 
         Parameters
@@ -518,27 +534,25 @@ class App:
         of_type: `type[Component] | None`, optional
             The component type to remove.
             If `None`, the default, is passed, all components will be removed from the all the currently active `Scene`s.
-        """
+        """  # ruff: ignore[line-too-long]
 
-        self.remove_components(
-            *(self.get_components(of_type=of_type) if of_type else self.all_components)
-        )
+        self.remove_components(*(self.get_components(of_type=of_type) if of_type else self.all_components))
 
     def singleton_component[C: type[Component]](self, cls: C, /) -> C:
         """
-        Similarly to `immediate_component`, instantiates and adds the instance of the decorated `Component` class
-        to the current `Scene` immediately, but also makes its class a singleton.
+        Similarly to `immediate_component`, instantiates and adds the instance of the decorated `Component` class to the
+        current `Scene` immediately, but also makes its class a singleton.
 
         Parameters
         ----------
-        component: `C`
+        cls: `C`
             The type to instantiate. Must be a subclass of `Component`.
 
         Returns
         -------
         `C`
             The original type.
-        """
+        """  # ruff: ignore[missing-blank-line-after-summary]
 
         return singleton(self.immediate_component(cls))
 
@@ -548,7 +562,7 @@ class App:
 
         Parameters
         ----------
-        component: `C`
+        cls: `C`
             The type to instantiate. Must be a subclass of `Component`.
 
         Returns
@@ -561,9 +575,7 @@ class App:
 
         return cls
 
-    def get_component[T: Component = Component](
-        self, /, *, of_type: type[T] | str
-    ) -> T | None:
+    def get_component[T: Component = Component](self, /, *, of_type: type[T] | str) -> T | None:
         """
         Gets a matching `Component` from any of the currently loaded `Scene`s.
 
@@ -580,9 +592,7 @@ class App:
 
         return first(self.get_components(of_type=of_type))
 
-    def get_components[T: Component = Component](
-        self, /, *, of_type: type[T] | str
-    ) -> Sequence[T]:
+    def get_components[T: Component = Component](self, /, *, of_type: type[T] | str) -> Sequence[T]:
         """
         Gets a collection of matching `Component`s from all currently loaded scenes.
 
@@ -599,9 +609,7 @@ class App:
 
         return list(filter_by_type(self.all_components, of_type))
 
-    def filter_components(
-        self, predicate: Callable[[Component], bool], /
-    ) -> Iterable[Component]:
+    def filter_components(self, predicate: Callable[[Component], bool], /) -> Iterable[Component]:
         """
         Filters all currently loaded scenes for `Component`s that return `True` for the specified predicate.
 
@@ -621,7 +629,9 @@ class App:
     def has_component(self, component: type[Component] | Component | str, /) -> bool:
         """
         Checks if the `App` contains the specified `Component` in any of its currently active `Scene`s.
-        If a type or type name is passed instead, checks if any of the currently active scenes contain a component of a matching type.
+
+        If a type or type name is passed instead, checks if any of the currently active scenes contain a component of a
+        matching type.
 
         Parameters
         ----------
@@ -694,7 +704,8 @@ class App:
 
     def add_module(self, module: type[Module] | Module, /) -> None:
         """
-        Adds a `Module` to the app, calling its `init` method immediately and scheduling its `quit` method to be called upon cleanup.
+        Adds a `Module` to the app, calling its `init` method immediately and scheduling its `quit` method to be called
+        pon cleanup.
 
         Parameters
         ----------
@@ -705,7 +716,7 @@ class App:
         ------
         `ValueError`
             If a type is passed that cannot be instanced with no arguments.
-        """
+        """  # ruff: ignore[missing-blank-line-after-summary]
 
         if isinstance(module, type):
             module = attempt_empty_call(

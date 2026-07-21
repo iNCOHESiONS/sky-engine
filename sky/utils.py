@@ -1,28 +1,34 @@
-"""Utilities, and extensions of `pygame` classes that replace certain methods with expection-less versions for ease of use."""
+"""Utilities, and extensions of `pygame` classes that replace certain methods with expection-less versions for ease of use."""  # ruff: ignore[line-too-long]
 
 from __future__ import annotations
 
 from collections import ChainMap
-from collections.abc import Generator, Iterable, Iterator, Sequence
 from inspect import Parameter, signature
 from random import randint, uniform
-from typing import TYPE_CHECKING, Any, Callable, Literal, Self, overload, override
+from typing import TYPE_CHECKING, Any, Literal, Self, overload, override
 
-from pygame.typing import SequenceLike
 from singleton_decorator import (  # pyright: ignore[reportMissingTypeStubs]
     singleton as untyped_singleton,  # pyright: ignore[reportUnknownVariableType]
 )
 
 from .types import PygameColor, PygameRect, PygameVector2, PygameVector3
 
+
 if TYPE_CHECKING:
+    from collections.abc import Callable, Generator, Iterable, Iterator, Sequence
+
+    from pygame.typing import SequenceLike
+
     from .core import Module
 
 __all__ = [
+    "Color",
+    "Rect",
+    "Vector2",
+    "Vector3",
     "animate",
     "attempt_empty_call",
     "clamp",
-    "Color",
     "combine_metaclasses",
     "discard",
     "filter_by_attrs",
@@ -38,11 +44,8 @@ __all__ = [
     "last",
     "make_module",
     "mapl",
-    "Rect",
     "saturate",
     "singleton",
-    "Vector2",
-    "Vector3",
     "walk_neighbours",
 ]
 
@@ -51,51 +54,100 @@ class Vector2(PygameVector2):
     """Replacement for `pygame.Vector2` with some extra utilities and exception-less versions of common methods."""
 
     @classmethod
-    def splat(cls, value: float) -> Self:
-        """Returns a `Vector2` with all components set to `value`"""
+    def splat(cls, value: float, /) -> Self:
+        """
+        Creates a `Vector2` with all components set to `value`.
+
+        Returns
+        -------
+        `Vector2`
+            The created `Vector2`.
+        """
 
         return cls(value, value)
 
     @classmethod
     def zero(cls) -> Self:
-        """Returns a zero `Vector2`. Same as `Vector2()`"""
+        """
+        Creates `Vector2` with all components set to 0. Same as `Vector2()`.
+
+        Returns
+        -------
+        `Vector2`
+            The created null `Vector2`.
+        """
 
         return cls()
 
     @classmethod
     def one(cls) -> Self:
-        """Returns a `Vector2` with all components set to 1."""
+        """
+        Creates a `Vector2` with all components set to 1.
+
+        Returns
+        -------
+        `Vector2`
+            The created `Vector2(1, 1)`.
+        """
 
         return cls.splat(1)
 
     @classmethod
     def up(cls) -> Self:
-        """Returns a `Vector2` pointing upwards."""
+        """
+        Creates a `Vector2` pointing upwards (per ).
+
+        Returns
+        -------
+        `Vector2`
+            The created `Vector2(0, -1)`.
+        """
 
         return cls(0, -1)
 
     @classmethod
     def down(cls) -> Self:
-        """Returns a `Vector2` pointing downwards."""
+        """
+        Creates a `Vector2` pointing downwards.
+
+        Returns
+        -------
+        `Vector2`
+            The created `Vector2(0, 1)`.
+        """
 
         return cls(0, 1)
 
     @classmethod
     def left(cls) -> Self:
-        """Returns a `Vector2` pointing left."""
+        """
+        Creates a `Vector2` pointing left.
+
+        Returns
+        -------
+        `Vector2`
+            The created `Vector2(-1, 0)`.
+        """
 
         return cls(-1, 0)
 
     @classmethod
     def right(cls) -> Self:
-        """Returns a `Vector2` pointing right."""
+        """
+        Creates a `Vector2` pointing right.
+
+        Returns
+        -------
+        `Vector2`
+            The created `Vector2(1, 0)`.
+        """
 
         return cls(1, 0)
 
     @classmethod
     def random(cls) -> Self:
         """
-        Returns a `Vector2` pointing in a random direction.
+        Returns a unit `Vector2` pointing in a random direction.
 
         Returns
         -------
@@ -132,8 +184,7 @@ class Vector2(PygameVector2):
     @override
     def normalize(self) -> Self:
         """
-        Normalizes the vector.\n
-        Exception-less version of `pygame.Vector2.normalize`.
+        Normalizes the vector. Exception-less version of `pygame.Vector2.normalize`.
 
         Returns
         -------
@@ -148,17 +199,17 @@ class Vector2(PygameVector2):
 
     def direction_to(self, other: Self, /) -> Self:
         """
-        Calculates the direction from this vector to another vector.
+        Calculates the direction from this `Vector2` to another.
 
         Parameters
         ----------
         other: `Vector2`
-            The other vector.
+            The other `Vector2`.
 
         Returns
         -------
         `Vector2`
-            The direction from this vector to the other vector.
+            The direction from this `Vector2` to the other.
         """
 
         return (other - self).normalize()
@@ -167,8 +218,7 @@ class Vector2(PygameVector2):
     # i mean, i'd look real stupid if this was slower just by virtue of being a python method as opposed to a c method
     def dirdist(self, other: Self, /) -> tuple[Self, float]:
         """
-        Calculates both the direction from this vector to another vector, and the distance between them.\n
-        Uses only one square root.
+        Calculates both the direction from this vector to another vector, and the distance between them.
 
         Parameters
         ----------
@@ -207,49 +257,81 @@ class Vector2(PygameVector2):
         self.y = 0
 
     def is_clear(self) -> bool:
-        """Checks if all elements of this vector are zero."""
+        """
+        Checks if all elements of this vector are zero.
+
+        Returns
+        -------
+        `bool`
+            Whether this `Vector2` is a null vector.
+        """
 
         return self.x == 0 and self.y == 0
 
     def with_x(self, x: float, /) -> Self:
         """
-        Returns a copy of this vector with the specified `x` component.
+        Creates a copy of this `Vector2` with the specified `x` component.
 
         Parameters
         ----------
         x: `float`
             The `x` component.
+
+        Returns
+        -------
+        `Self`
+            Simply `Vector2(x, self.y)`.
         """
 
         return self.__class__(x, self.y)
 
     def with_y(self, y: float, /) -> Self:
         """
-        Returns a copy of this vector with the specified `y` component.
+        Creates a copy of this vector with the specified `y` component.
 
         Parameters
         ----------
         y: `float`
             The `y` component.
+
+        Returns
+        -------
+        `Self`
+            Simply `Vector2(self.x, y)`.
         """
 
         return self.__class__(self.x, y)
 
     def with_inverted_x(self) -> Self:
-        """Returns a copy of this vector with the `x` component inverted."""
+        """
+        Creates a copy of this vector with the `x` component inverted.
+
+        Returns
+        -------
+        `Self`
+            Simply `Vector2(-self.x, self.y)`.
+        """
 
         return self.__class__(-self.x, self.y)
 
     def with_inverted_y(self) -> Self:
-        """Returns a copy of this vector with the `y` component inverted."""
+        """
+        Creates a copy of this vector with the `y` component inverted.
+
+        Returns
+        -------
+        `Self`
+            Simply `Vector2(self.x, -self.y)`.
+        """
 
         return self.__class__(self.x, -self.y)
 
     def to_int_tuple(self) -> tuple[int, int]:
         """
-        This `Vector2` as a tuple of integers.\n
-        Useful for passing the vector to functions that specifically expect a tuple of integers as opposed to any sequence of numbers
-        or for unpacking to positional arguments without type checking errors.
+        This `Vector2` as a tuple of integers.
+
+        Useful for passing the vector to functions that specifically expect a tuple of integers as opposed to any
+        sequence of numbers or for unpacking to positional arguments without type checking errors.
 
         Returns
         -------
@@ -264,67 +346,133 @@ class Vector2(PygameVector2):
 
 
 class Vector3(PygameVector3):
-    """Replacement for `pygame.Vector3` with some extra utilities and exception-less versions of common methods"""
+    """Replacement for `pygame.Vector3` with some extra utilities and exception-less versions of common methods."""
 
     @classmethod
-    def splat(cls, value: float) -> Self:
-        """Returns a `Vector3` with all values set to `value`"""
+    def splat(cls, value: float, /) -> Self:
+        """
+        Creates a `Vector3` with all values set to `value`.
+
+        Returns
+        -------
+        `Vector3`
+            The created `Vector3`.
+        """
 
         return cls(value, value, value)
 
     @classmethod
     def zero(cls) -> Self:
-        """Returns a zero `Vector3`. Same as `Vector3()`"""
+        """
+        Creates a zero `Vector3`. Same as `Vector3()`.
+
+        Returns
+        -------
+        `Vector3`
+            The created null `Vector3`.
+        """
 
         return cls()
 
     @classmethod
     def one(cls) -> Self:
-        """Returns a `Vector3` with all components set to 1."""
+        """
+        Creates a `Vector3` with all components set to 1.
+
+        Returns
+        -------
+        `Vector3`
+            The created `Vector3(1, 1, 1)`.
+        """
 
         return cls.splat(1)
 
     @classmethod
     def up(cls) -> Self:
-        """Returns a `Vector3` pointing upwards."""
+        """
+        Creates a `Vector3` pointing upwards.
+
+        Note that this method considers upwards to be positive in the y-axis, opposite to `Vector2`.
+
+        Returns
+        -------
+        `Vector3`
+            The created `Vector3(0, 1, 0)`.
+        """
 
         return cls(0, 1, 0)
 
     @classmethod
     def down(cls) -> Self:
-        """Returns a `Vector3` pointing downwards."""
+        """
+        Creates a `Vector3` pointing downwards.
+
+        Note that this method considers downwards to be negative in the y-axis, opposite to `Vector2`.
+
+        Returns
+        -------
+        `Vector3`
+            The created `Vector3(0, -1, 0)`.
+        """
 
         return cls(0, -1, 0)
 
     @classmethod
     def left(cls) -> Self:
-        """Returns a `Vector3` pointing left."""
+        """
+        Creates a `Vector3` pointing left.
+
+        Returns
+        -------
+        `Vector3`
+            The created `Vector3(-1, 0, 0)`.
+        """
 
         return cls(-1, 0, 0)
 
     @classmethod
     def right(cls) -> Self:
-        """Returns a `Vector3` pointing right."""
+        """
+        Creates a `Vector3` pointing right.
+
+        Returns
+        -------
+        `Vector3`
+            The created `Vector3(1, 0, 0)`.
+        """
 
         return cls(1, 0, 0)
 
     @classmethod
     def forward(cls) -> Self:
-        """Returns a `Vector3` pointing forward."""
+        """
+        Creates a `Vector3` pointing forward.
+
+        Returns
+        -------
+        `Vector3`
+            The created `Vector3(0, 0, 1)`.
+        """
 
         return cls(0, 0, 1)
 
     @classmethod
     def backward(cls) -> Self:
-        """Returns a `Vector3` pointing backward."""
+        """
+        Creates a `Vector3` pointing backward.
+
+        Returns
+        -------
+        `Vector3`
+            The created `Vector3(0, 0, -1)`.
+        """
 
         return cls(0, 0, -1)
 
     @override
     def normalize(self) -> Self:
         """
-        Normalizes the vector.\n
-        Exception-less version of `pygame.Vector3.normalize`.
+        Normalizes the vector. Exception-less version of `pygame.Vector3.normalize`.
 
         Returns
         -------
@@ -358,8 +506,7 @@ class Vector3(PygameVector3):
     # i mean, i'd look real stupid if this was slower just by virtue of being a python method as opposed to a c method
     def dirdist(self, other: Self, /) -> tuple[Self, float]:
         """
-        Calculates both the direction from this vector to another vector, and the distance between them.\n
-        Uses only one square root.
+        Calculates both the direction from this vector to another vector, and the distance between them.
 
         Parameters
         ----------
@@ -402,66 +549,110 @@ class Vector3(PygameVector3):
         self.z = 0
 
     def is_clear(self) -> bool:
-        """Checks if all elements of this vector are zero."""
+        """
+        Checks if all elements of this vector are zero.
+
+        Returns
+        -------
+        `bool`
+            Whether this `Vector2` is a null vector.
+        """
 
         return self.x == 0 and self.y == 0 and self.z == 0
 
     def with_x(self, x: float, /) -> Self:
         """
-        Returns a copy of this vector with the specified `x` component.
+        Creates a copy of this vector with the specified `x` component.
 
         Parameters
         ----------
         x: `float`
             The `x` component.
+
+        Returns
+        -------
+        `Self`
+            Simply `Vector2(x, self.y, self.z)`.
         """
 
         return self.__class__(x, self.y, self.z)
 
     def with_y(self, y: float, /) -> Self:
         """
-        Returns a copy of this vector with the specified `y` component.
+        Creates a copy of this vector with the specified `y` component.
 
         Parameters
         ----------
         y: `float`
             The `y` component.
+
+        Returns
+        -------
+        `Self`
+            Simply `Vector2(self.x, y, self.z)`.
         """
 
         return self.__class__(self.x, y, self.z)
 
     def with_z(self, z: float, /) -> Self:
         """
-        Returns a copy of this vector with the specified `z` component.
+        Creates a copy of this vector with the specified `z` component.
 
         Parameters
         ----------
         z: `float`
             The `z` component.
+
+        Returns
+        -------
+        `Self`
+            Simply `Vector2(self.x, self.y, z)`.
         """
 
         return self.__class__(self.x, self.y, z)
 
     def with_inverted_x(self) -> Self:
-        """Returns a copy of this vector with the `x` component inverted."""
+        """
+        Creates a copy of this vector with the `x` component inverted.
+
+        Returns
+        -------
+        `Self`
+            Simply `Vector2(-self.x, self.y, self.z)`.
+        """
 
         return self.__class__(-self.x, self.y, self.z)
 
     def with_inverted_y(self) -> Self:
-        """Returns a copy of this vector with the `y` component inverted."""
+        """
+        Creates a copy of this vector with the `y` component inverted.
+
+        Returns
+        -------
+        `Self`
+            Simply `Vector2(self.x, -self.y, self.z)`.
+        """
 
         return self.__class__(self.x, -self.y, self.z)
 
     def with_inverted_z(self) -> Self:
-        """Returns a copy of this vector with the `z` component inverted."""
+        """
+        Creates a copy of this vector with the `z` component inverted.
+
+        Returns
+        -------
+        `Self`
+            Simply `Vector2(self.x, self.y, -self.z)`.
+        """
 
         return self.__class__(self.x, self.y, -self.z)
 
     def to_int_tuple(self) -> tuple[int, int, int]:
         """
-        This `Vector3` as a tuple of integers.\n
-        Useful for passing the vector to functions that specifically expect a tuple of integers as opposed to any sequence of numbers
-        or for unpacking to positional arguments without type checking errors.
+        This `Vector3` as a tuple of integers.
+
+        Useful for passing the vector to functions that specifically expect a tuple of integers as opposed to any
+        sequence of numbers or for unpacking to positional arguments without type checking errors.
 
         Returns
         -------
@@ -476,7 +667,7 @@ class Vector3(PygameVector3):
 
 
 class Color(PygameColor):
-    """Replacement for `pygame.Color` with some extra utilities and exception-less versions of common methods"""
+    """Replacement for `pygame.Color` with some extra utilities and exception-less versions of common methods."""
 
     @classmethod
     def random(cls, minimum: int = 0, maximum: int = 255, /) -> Self:
@@ -503,12 +694,9 @@ class Color(PygameColor):
         )
 
     @override
-    def lerp(
-        self, color: PygameColor | SequenceLike[int] | str | int, amount: float
-    ) -> PygameColor:
+    def lerp(self, color: PygameColor | SequenceLike[int] | str | int, amount: float) -> PygameColor:
         """
-        Interpolates between this color and another color.\n
-        Exception-less version of `pygame.Color.lerp`.
+        Interpolates between this color and another color. Exception-less version of `pygame.Color.lerp`.
 
         Parameters
         ----------
@@ -714,7 +902,8 @@ class Rect(PygameRect):
     @classmethod
     def from_center(cls, position: Iterable[float], size: Iterable[float], /) -> Self:
         """
-        Returns a `Rect` with the given position and size, centered at the given position.\n
+        Returns a `Rect` with the given position and size, centered at the given position.
+
         Shorthand for setting the `center` and `size` properties of a `pygame.Rect` object.
 
         Parameters
@@ -753,16 +942,6 @@ def get_by_attrs[T](iterable: Iterable[T], /, **attrs: Any) -> T | None:
     """
     Gets an element from an `Iterable` based on the specified attributes and values of those attributes.
 
-    Examples
-    --------
-    >>> people = [
-    ...     Person("Lucas", age=14),
-    ...     Person("Marcus", age=51),
-    ...     Person("Mary", age=23),
-    ... ]
-    >>> aged_twenty_three = get(people, age=23)
-    Person('Mary', age=23)
-
     Parameters
     ----------
     iterable: `Iterable[T]`
@@ -774,6 +953,16 @@ def get_by_attrs[T](iterable: Iterable[T], /, **attrs: Any) -> T | None:
     -------
     `T | None`
         The element, or `None` if no elements with matching attributes was found.
+
+    Examples
+    --------
+    >>> people = [
+    ...     Person("Lucas", age=14),
+    ...     Person("Marcus", age=51),
+    ...     Person("Mary", age=23),
+    ... ]
+    >>> aged_twenty_three = get(people, age=23)
+    Person('Mary', age=23)
     """
 
     return first(filter_by_attrs(iterable, **attrs))
@@ -806,6 +995,18 @@ def get_by_type[T, U](iterable: Iterable[T], typ: type[U], /) -> U | None:
     """
     Gets an element from an `Iterable` based on the specified type.
 
+    Parameters
+    ----------
+    iterable: `Iterable[T]`
+        The `Iterable` to be filtered.
+    typ: `type[U]`
+        The type to filter for. Must inherit from `T`.
+
+    Returns
+    -------
+    `U | None`
+        The element, or `None` if no elements with a matching type was found.
+
     Examples
     --------
     ```python
@@ -818,18 +1019,6 @@ def get_by_type[T, U](iterable: Iterable[T], typ: type[U], /) -> U | None:
     bar = Bar()
     assert get_by_attrs([Foo(), Foo(), b], Bar) == bar
     ```
-
-    Parameters
-    ----------
-    iterable: `Iterable[T]`
-        The `Iterable` to be filtered.
-    typ: `type[U]`
-        The type to filter for. Must inherit from `T`.
-
-    Returns
-    -------
-    `U | None`
-        The element, or `None` if no elements with a matching type was found.
     """
 
     return first(filter_by_type(iterable, typ))
@@ -853,16 +1042,12 @@ def filter_by_type[T, U](iterable: Iterable[T], typ: type[U] | str, /) -> Iterat
     """
 
     return filter(
-        lambda e: (
-            isinstance(e, typ) if isinstance(typ, type) else e.__class__.__name__ == typ
-        ),
+        lambda e: isinstance(e, typ) if isinstance(typ, type) else e.__class__.__name__ == typ,
         iterable,
     )  # pyright: ignore[reportReturnType]
 
 
-def find[T, TDefault](
-    pred: Callable[[T], bool], i: Iterable[T], /, *, default: TDefault = None
-) -> T | TDefault:
+def find[T, TDefault](pred: Callable[[T], bool], i: Iterable[T], /, *, default: TDefault = None) -> T | TDefault:
     """
     Finds the first element in an `Iterable` that passes the specified predicate.
 
@@ -885,9 +1070,7 @@ def find[T, TDefault](
     return first(filter(pred, i), default=default)
 
 
-def find_last[T, TDefault](
-    pred: Callable[[T], bool], i: Iterable[T], /, *, default: TDefault = None
-) -> T | TDefault:
+def find_last[T, TDefault](pred: Callable[[T], bool], i: Iterable[T], /, *, default: TDefault = None) -> T | TDefault:
     """
     Finds the last element in an `Iterable` that passes the specified predicate.
 
@@ -914,17 +1097,6 @@ def first[T, TDefault](i: Iterable[T], /, *, default: TDefault = None) -> T | TD
     """
     Consumes and gets the first element of an `Iterable`.
 
-    Examples
-    --------
-    >>> first([1, 2, 3])
-    1
-    >>> first(range(10))
-    0
-    >>> first([])
-    None
-    >>> first([], default=True)
-    True
-
     Parameters
     ----------
     i: `Iterable[T]`
@@ -936,6 +1108,17 @@ def first[T, TDefault](i: Iterable[T], /, *, default: TDefault = None) -> T | TD
     -------
     `T | TDefault`
         The first element of the `Iterable`, or the `default` value (`None` by default) if the `Iterable` is empty.
+
+    Examples
+    --------
+    >>> first([1, 2, 3])
+    1
+    >>> first(range(10))
+    0
+    >>> first([])
+    None
+    >>> first([], default=True)
+    True
     """
 
     try:
@@ -948,17 +1131,6 @@ def last[T, TDefault](i: Iterable[T], /, *, default: TDefault = None) -> T | TDe
     """
     Consumes and gets the last element of an `Iterable`.
 
-    Examples
-    --------
-    >>> last([1, 2, 3])
-    3
-    >>> last(range(10))
-    9
-    >>> last([])
-    None
-    >>> last([], default=True)
-    True
-
     Parameters
     ----------
     i: `Iterable[T]`
@@ -970,6 +1142,17 @@ def last[T, TDefault](i: Iterable[T], /, *, default: TDefault = None) -> T | TDe
     -------
     `T | None`
         The first element of the `Iterable`, or the `default` value (`None` by default) if the `Iterable` is empty.
+
+    Examples
+    --------
+    >>> last([1, 2, 3])
+    3
+    >>> last(range(10))
+    9
+    >>> last([])
+    None
+    >>> last([], default=True)
+    True
     """
 
     try:
@@ -983,7 +1166,14 @@ def discard(_: Any, /) -> None:
 
 
 def identity[T](value: T, /) -> T:
-    """Simply returns the input, unchanged. Maintains its type."""
+    """
+    Simply returns the input, unchanged. Maintains its type.
+
+    Returns
+    -------
+    `T`
+        The same value, unchaged.
+    """
 
     return value
 
@@ -1006,24 +1196,37 @@ def ilen(i: Iterable[Any], /) -> int:
     return sum(1 for _ in i)  # faster than len(tuple(i)) or len(list(i))
 
 
-def mapl[T, U](f: Callable[[T], U], i: Iterable[T]) -> list[U]:
-    """Like `map`, but it returns a `list` instead."""
+def mapl[T, U](func: Callable[[T], U], i: Iterable[T], /) -> list[U]:
+    """
+    Same as `list(map(func, iter))`.
 
-    return list(map(f, i))
+    Returns
+    -------
+    `list[U]`
+        The resulting list.
+    """
+
+    return list(map(func, i))
 
 
-def filterl[T](f: Callable[[T], bool], i: Iterable[T]) -> list[T]:
-    """Like `filter`, but it returns a `list` instead."""
+def filterl[T](func: Callable[[T], bool], i: Iterable[T], /) -> list[T]:
+    """
+    Same as `list(filter(func, iter))`.
 
-    return list(filter(f, i))
+    Returns
+    -------
+    `list[U]`
+        The resulting list.
+    """
+
+    return list(filter(func, i))
 
 
 @overload
-def walk_neighbours[T](
-    seq: Sequence[T], /, *, wrap: Literal[True]
-) -> Generator[tuple[T, T, T]]:
+def walk_neighbours[T](seq: Sequence[T], /, *, wrap: Literal[True]) -> Generator[tuple[T, T, T]]:
     """
-    Walks a sequence, yielding each element along with its neighbours.\n
+    Walks a sequence, yielding each element along with its neighbours.
+
     For the first value, the left neighbour is the last value of the sequence,
     and for the last value, the right neighbour is the first value of the sequence.
 
@@ -1042,11 +1245,10 @@ def walk_neighbours[T](
 
 
 @overload
-def walk_neighbours[T](
-    seq: Sequence[T], /, *, wrap: Literal[False]
-) -> Generator[tuple[T | None, T, T | None]]:
+def walk_neighbours[T](seq: Sequence[T], /, *, wrap: Literal[False]) -> Generator[tuple[T | None, T, T | None]]:
     """
-    Walks a sequence, yielding each element along with its neighbours.\n
+    Walks a sequence, yielding each element along with its neighbours.
+
     For the first value, the left neighbour is `None`, and for the last value, the right neighbour is `None`.
 
     Parameters
@@ -1064,16 +1266,13 @@ def walk_neighbours[T](
 
 
 @overload
-def walk_neighbours[T](
-    seq: Sequence[T], /, *, wrap: bool = False
-) -> Generator[tuple[T | None, T, T | None]]: ...
+def walk_neighbours[T](seq: Sequence[T], /, *, wrap: bool = False) -> Generator[tuple[T | None, T, T | None]]: ...
 
 
-def walk_neighbours[T](
-    seq: Sequence[T], /, *, wrap: bool = False
-) -> Generator[tuple[T | None, T, T | None]]:
+def walk_neighbours[T](seq: Sequence[T], /, *, wrap: bool = False) -> Generator[tuple[T | None, T, T | None]]:
     """
-    Walks a sequence, yielding each element along with its neighbours.\n
+    Walks a sequence, yielding each element along with its neighbours.
+
     For the first value, the left neighbour is `None` or the last value of the sequence if `wrap` is True,
     and for the last value, the right neighbour is `None` or the first value of the sequence if `wrap` is True.
 
@@ -1108,8 +1307,34 @@ def animate(
 ) -> Generator[float]:
     """
     Generates a sequence of floats, generally from 0 to 1, with a step size defined by `step`.
+
     Optionally, an `easing` function can be provided to control the yielded values.
     Guaranteed to always yield 1 if `force_end` is `True`.
+
+    Parameters
+    ----------
+    duration: `float`
+        The duration of the animation.
+    step: `Callable[[], float]`
+        A function that returns the next step of the animation.\n
+        For general real-time based animations, use `app.chrono.deltatime`.
+    easing: `Callable[[float], float]`
+        An easing function that controls the values returned.\n
+        Defaults to `linear`. See the `easing` module for more options.
+    clamped: `bool`
+        Whether to force the function to always yield values between 0 and 1.
+    force_end: `bool`
+        Whether to force the function to yield 1 at the end of the animation.
+
+    Yields
+    ------
+    `float`
+        The next step of the animation, per the `step` function.
+
+    Raises
+    ------
+    `ValueError`
+        If `duration` is less than or equal to 0.
 
     Examples
     --------
@@ -1129,40 +1354,13 @@ def animate(
         start = Vector2(200, app.window.height / 2)
         end = start.with_x(app.window.width - 200)
 
-        for t in animate(
-            duration=3, step=lambda: app.chrono.deltatime, easing=bounce_out
-        ):
+        for t in animate(duration=3, step=lambda: app.chrono.deltatime, easing=bounce_out):
             pygame.draw.circle(app.window.surface, RED, start.lerp(end, t), 30)
             yield None
 
 
     app.mainloop()
     ```
-
-    Parameters
-    ----------
-    duration: `float`
-        The duration of the animation.
-    step: `Callable[[], float]`
-        A function that returns the next step of the animation.\n
-        For general real-time based animations, use `app.chrono.deltatime`.
-    easing: `Callable[[float], float]`
-        An easing function that controls the values returned.\n
-        Defaults to `linear`. See the `easing` module for more options.
-    clamp: `bool`
-        Whether to force the function to always yield values between 0 and 1.
-    force_end: `bool`
-        Whether to force the function to yield 1 at the end of the animation.
-
-    Yields
-    ------
-    `float`
-        The next step of the animation, per the `step` function.
-
-    Raises
-    ------
-    `ValueError`
-        If `duration` is less than or equal to 0.
     """
 
     if duration <= 0:
@@ -1230,9 +1428,19 @@ def saturate(value: float, /) -> float:
 clamp01 = saturate  # alias
 
 
-def is_callable_with_no_arguments(callable: Callable[..., Any], /) -> bool:
+def is_callable_with_no_arguments(func: Callable[..., Any], /) -> bool:
     """
     Checks whether or not the given `Callable` can be called with no arguments without actually calling it.
+
+    Parameters
+    ----------
+    func: `Callable[..., Any]`
+        The `Callable` to check.
+
+    Returns
+    -------
+    `bool`
+        Whether or not the `Callable` can be called with no arguments.
 
     Examples
     --------
@@ -1248,30 +1456,19 @@ def is_callable_with_no_arguments(callable: Callable[..., Any], /) -> bool:
     is_callable_with_no_arguments(c)  # True, c() -> args is an empty list
     is_callable_with_no_arguments(d)  # True, d() -> kwargs is an empty dict
     ```
-
-    Parameters
-    ----------
-    callable: `Callable[..., Any]`
-        The `Callable` to check.
-
-    Returns
-    -------
-    `bool`
-        Whether or not the `Callable` can be called with no arguments.
     """
 
     count = ilen(
         param
-        for param in signature(callable).parameters.values()
-        if param.default is Parameter.empty
-        and param.kind not in (Parameter.VAR_KEYWORD, Parameter.VAR_POSITIONAL)
+        for param in signature(func).parameters.values()
+        if param.default is Parameter.empty and param.kind not in {Parameter.VAR_KEYWORD, Parameter.VAR_POSITIONAL}
     )
 
     return count == 0
 
 
 def attempt_empty_call[T](
-    callable: Callable[..., T],
+    func: Callable[..., T],
     /,
     *,
     err: str,
@@ -1279,13 +1476,15 @@ def attempt_empty_call[T](
 ) -> T:
     """
     Attempts to call a `Callable` with an empty argument list.
+
     Used to display richer error messages, as the usual `TypeError` usually raised may not contain enough information
     for easy debugging. Raises a `ValueError` by default.\n
-    Alternatively, for a simple check that does not execute the callable, use `is_callable_with_no_arguments`.
+
+    Alternatively, for a simple check that does not execute the `Callable`, use `is_callable_with_no_arguments`.
 
     Parameters
     ----------
-    callable: `Callable[..., T]`
+    func: `Callable[..., T]`
         The `Callable` to check.
     err: `str`
         The error message to attach to the raised exception.
@@ -1304,9 +1503,9 @@ def attempt_empty_call[T](
     """
 
     try:
-        return callable()
+        return func()
     except TypeError:
-        raise exception_type(err)
+        raise exception_type(err) from None
 
 
 def singleton[C: type](cls: C, /) -> C:
@@ -1319,6 +1518,7 @@ def singleton[C: type](cls: C, /) -> C:
         Any class.
 
     Returns
+    -------
     `C`
         Actually returns a `_SingletonWrapper` instance, but we lie to the type system for convenience.
     """
@@ -1336,6 +1536,7 @@ def immediate[F: Callable[[], Any]](func: F, /) -> F:
         A function that can be called with no arguments.
 
     Returns
+    -------
     `F`
         The function itself, with no changes to its type.
     """
@@ -1366,19 +1567,20 @@ def combine_metaclasses(*metaclasses: type) -> type:
         If a consistent MRO cannot be created.
     """
 
-    if len(metaclasses) == 0:
-        raise ValueError("At least one metaclass must be provided.")
-    elif len(metaclasses) == 1:
-        return metaclasses[0]
+    match len(metaclasses):
+        case 0:
+            raise ValueError("At least one metaclass must be provided.")
+        case 1:
+            return metaclasses[0]
+        case _:
+            return type(
+                "_".join(mcls.__name__ for mcls in metaclasses),
+                metaclasses,
+                ChainMap(*(mcls.__dict__ for mcls in metaclasses)),  # pyright: ignore[reportArgumentType]
+            )
 
-    return type(
-        "_".join(mcls.__name__ for mcls in metaclasses),
-        metaclasses,
-        ChainMap(*(mcls.__dict__ for mcls in metaclasses)),  # pyright: ignore[reportArgumentType]
-    )
 
-
-def make_module(*, init: Callable[[], None], quit: Callable[[], None]) -> Module:
+def make_module(*, init: Callable[[], None], quit: Callable[[], None]) -> Module:  # ruff: ignore[builtin-argument-shadowing]
     """
     Creates a `Module` based on an `init` and `quit` method, for ease of use.
 
@@ -1395,7 +1597,7 @@ def make_module(*, init: Callable[[], None], quit: Callable[[], None]) -> Module
         A `Module` that simply wraps the specified methods, with no additional metadata in particular.
     """
 
-    class __mod:
+    class __mod:  # ruff: ignore[invalid-class-name]
         def init(self) -> None:
             init()
 

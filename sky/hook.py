@@ -3,25 +3,19 @@
 from __future__ import annotations
 
 import functools
+
 from bisect import insort
-from collections.abc import Iterator, Sequence
 from operator import itemgetter
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    ClassVar,
-    Literal,
-    Self,
-    get_type_hints,
-    overload,
-)
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, Self, get_type_hints, overload
 
 from .sentinel import Sentinel
 from .types import Coroutine
 from .utils import first, mapl
 
+
 if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator, Sequence
+
     from .app import App
 
 __all__ = ["Hook"]
@@ -154,7 +148,9 @@ class Hook[**TParams = [], TReturn: Any = None]:
 
 
     on_something.notify()
-    on_something.notify()  # raises `RuntimeError`. you can check if it's already been called at least once with the `on_something.called` property.
+
+    # Raises `RuntimeError`. One may check if this hook been notified at least once with the `called` property.
+    on_something.notify()
     ```
     """
 
@@ -168,9 +164,7 @@ class Hook[**TParams = [], TReturn: Any = None]:
         cancellable: bool = False,
         once: bool = False,
     ) -> None:
-        self._callbacks: list[tuple[Callable[TParams, TReturn], int]] = [
-            (c, 0) for c in callbacks or []
-        ]
+        self._callbacks: list[tuple[Callable[TParams, TReturn], int]] = [(c, 0) for c in callbacks or []]
 
         self._cancellable = cancellable
         self._cancelled = False
@@ -182,19 +176,28 @@ class Hook[**TParams = [], TReturn: Any = None]:
         return iter(c for c, _ in self._callbacks)
 
     @overload
-    def __call__(
-        self, callback: Callable[TParams, Coroutine], /
-    ) -> Callable[TParams, Coroutine]: ...
+    def __call__(self, callback: Callable[TParams, Coroutine], /) -> Callable[TParams, Coroutine]: ...
 
     @overload
-    def __call__(
-        self, callback: Callable[TParams, TReturn], /
-    ) -> Callable[TParams, TReturn]: ...
+    def __call__(self, callback: Callable[TParams, TReturn], /) -> Callable[TParams, TReturn]: ...
 
-    def __call__[TCallable: Callable[..., Any]](
-        self, callback: TCallable, /
-    ) -> TCallable:
-        if get_type_hints(callback).get("return", None) is Coroutine:
+    def __call__[TCallable: Callable[..., Any]](self, callback: TCallable, /) -> TCallable:
+        """
+        Adds the decorated function as a callback. Properly handles `Coroutines`.
+
+        Parameters
+        ----------
+        callback: `TCallable`
+            The function being decorated.
+            `TCallable` is `Callable[TParams, TReturn]` or `Callable[TParams, Coroutine]`.
+
+        Returns
+        -------
+        `TCallable`
+            The decorated function.
+        """
+
+        if get_type_hints(callback).get("return") is Coroutine:
 
             def __add(*args: TParams.args, **kwargs: TParams.kwargs) -> TReturn:
                 self.app.executor.start_coroutine(callback(*args, **kwargs))
@@ -206,9 +209,7 @@ class Hook[**TParams = [], TReturn: Any = None]:
 
         return callback
 
-    def __imatmul__(
-        self, callback_with_priority: tuple[Callable[TParams, TReturn], int], /
-    ) -> Self:
+    def __imatmul__(self, callback_with_priority: tuple[Callable[TParams, TReturn], int], /) -> Self:
         self.add_callback(callback_with_priority)
         return self
 
@@ -225,6 +226,8 @@ class Hook[**TParams = [], TReturn: Any = None]:
 
     @property
     def callbacks(self) -> Sequence[Callable[TParams, TReturn]]:
+        """This `Hook`'s callbacks."""
+
         return mapl(itemgetter(0), self._callbacks)
 
     @property
@@ -277,8 +280,10 @@ class Hook[**TParams = [], TReturn: Any = None]:
             The callback to add.
         priority: `Literal["min", "max"] | int`
             The priority of the callback.\n
-            If set to `"min"`, the callback will be added with a priority of the current lowest priority callback minus 1. If this is the first callback being added, it will have a priority of `-100`.\n
-            If set to `"max"`, the callback will be added with a priority of the current highest priority callback plus 1. If this is the first callback being added, it will have a priority of `100`.\n
+            If set to `"min"`, the callback will be added with a priority of the current lowest priority callback
+            minus 1. If this is the first callback being added, it will have a priority of `-100`.\n
+            If set to `"max"`, the callback will be added with a priority of the current highest priority callback
+            plus 1. If this is the first callback being added, it will have a priority of `100`.\n
             If set to an `int`, the callback will simply be added with that priority.
         """
 
@@ -308,9 +313,7 @@ class Hook[**TParams = [], TReturn: Any = None]:
             If the callback wasn't found.
         """
 
-        if (
-            remove := first(filter(lambda c: c[0] == callback, self._callbacks))
-        ) is None:
+        if (remove := first(filter(lambda c: c[0] == callback, self._callbacks))) is None:
             raise ValueError("Callback not found.")
 
         self._callbacks.remove(remove)
@@ -386,10 +389,24 @@ class Hook[**TParams = [], TReturn: Any = None]:
         self._cancelled = True
 
     def equals(
-        self, *args: TParams.args, **kwargs: TParams.kwargs
+        self,
+        *args: TParams.args,
+        **kwargs: TParams.kwargs,
     ) -> Callable[[Callable[[], TReturn]], Callable[TParams, TReturn]]:
         """
-        Prevents a handler from being invoked if the arguments passed to `invoke` don't match the arguments passed as `args`.
+        Prevents a callback from being invoked if the arguments passed to `invoke` don't match the specified arguments.
+
+        Parameters
+        ----------
+        *args: `TParams.args`
+            The arguments to check against.
+        **kwargs: `TParams.kwargs`
+            The keyword arguments to check against.
+
+        Returns
+        -------
+        `Callable[[Callable[[], None]], Callable[TParams, TReturn]]`
+            The decorated function.
 
         Examples
         --------
@@ -406,18 +423,6 @@ class Hook[**TParams = [], TReturn: Any = None]:
         @app.mouse.on_button_downed.equals(MouseButton.left)
         def on_button_downed() -> None: ...
         ```
-
-        Parameters
-        ----------
-        *args: `TParams.args`
-            The arguments to check against.
-        **kwargs: `TParams.kwargs`
-            The keyword arguments to check against.
-
-        Returns
-        -------
-        `Callable[[Callable[[], None]], Callable[TParams, TReturn]]`
-            The decorated function.
         """
 
         def decorator(
@@ -436,16 +441,3 @@ class Hook[**TParams = [], TReturn: Any = None]:
             return wrapper
 
         return decorator
-
-    def execute_once(
-        self, callback: Callable[TParams, TReturn], /
-    ) -> Callable[TParams, TReturn]:
-        def __proxy(*args: TParams.args, **kwargs: TParams.kwargs) -> TReturn:
-            nonlocal self
-            results = callback(*args, **kwargs)
-            self -= __proxy
-            return results
-
-        self += __proxy
-
-        return callback

@@ -1,8 +1,10 @@
 import inspect
+
 from importlib import import_module
 
 from sky import App, AppSpec, Component
 from sky.modules import HotComponentReloading
+
 
 app = App(spec=AppSpec(modules=[hcr := HotComponentReloading()]))
 

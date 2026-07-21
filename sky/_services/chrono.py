@@ -1,9 +1,12 @@
+# ruff: file-ignore[call-datetime-now-without-tzinfo]
+
 from datetime import datetime, timedelta
 from typing import final, override
 
 from pygame import Clock
 
-from ..core import Service
+from sky.core import Service
+
 
 __all__ = ["Chrono"]
 
@@ -14,7 +17,9 @@ class Chrono(Service):
 
     def __init__(self) -> None:
         self.target_framerate = self.app.windowing.primary_monitor.refresh_rate
-        """The target framerate. Set to 0 to disable framerate limiting. Set to the main monitor's refresh rate by default."""
+        """
+        The target framerate. Set to 0 to disable framerate limiting. Set to the main monitor's refresh rate by default.
+        """
 
         self.framerate = 0
         """The current framerate."""

@@ -7,6 +7,7 @@ from pymunk import Body, Circle, Segment, Space
 from sky import App, AppSpec, Color, Component, MouseButton, Vector2
 from sky.colors import ALICE_BLUE
 
+
 app = App(spec=AppSpec(modules=[freetype]))
 app.keyboard.add_keybindings(escape=app.quit)
 
@@ -74,9 +75,7 @@ def on_left_pressed() -> None:
 @app.mouse.on_mouse_button_pressed.equals(MouseButton.right)
 def on_right_pressed() -> None:
     for ball in app.get_components(of_type=Ball):
-        ball.body.velocity += (
-            Vector2(ball.body.position).direction_to(app.mouse.position) * 10
-        ).ituple()
+        ball.body.velocity += (Vector2(ball.body.position).direction_to(app.mouse.position) * 10).ituple()
 
 
 app.mainloop()

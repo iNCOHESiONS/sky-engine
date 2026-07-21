@@ -7,9 +7,12 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from time import perf_counter
-from typing import TYPE_CHECKING, Callable, ClassVar, final, override
+from typing import TYPE_CHECKING, ClassVar, final, override
+
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from .app import App
 
 __all__ = [
@@ -28,15 +31,18 @@ class Yieldable(ABC):
 
     @abstractmethod
     def is_ready(self) -> bool:
-        raise NotImplementedError()
+        """Whether this `Yieldable` is ready to continue execution."""
+
+        raise NotImplementedError
 
 
 @final
 @dataclass
 class WaitForFrames(Yieldable):
     """
-    Waits for a certain amount of frames to pass. By default, it waits for 1 frame.
-    If None is returned from a coroutine, it will also wait for 1 frame.
+    Waits for a certain amount of frames to pass.
+
+    By default, it waits for 1 frame. If None is returned from a coroutine, it will also wait for 1 frame.
     """
 
     frames: int = 1

@@ -3,6 +3,7 @@ from pygame import draw
 from sky import App, Key, MouseButton, WindowSpec
 from sky.colors import ALICE_BLUE, CRIMSON
 
+
 app = App(spec=WindowSpec(fill=CRIMSON))
 
 pos = app.window.center

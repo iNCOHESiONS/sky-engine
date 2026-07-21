@@ -3,22 +3,25 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Sequence
+
 from typing import TYPE_CHECKING, Any, ClassVar, final, override
 
 import pygame
 
 from ._compat import get_window_handle, make_window_transparent
 from ._managers import Keyboard, Mouse
-from .core import InputManager, Monitor
 from .hook import Hook
-from .spec import WindowSpec
 from .types import PygameEvent, PygameRect, PygameSurface
 from .utils import Color, Rect, Vector2, get_by_type
 
+
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from ._services import Windowing
     from .app import App
+    from .core import InputManager, Monitor
+    from .spec import WindowSpec
 
 
 __all__ = ["Window"]
@@ -100,12 +103,13 @@ class Window:
 
     @override
     def __eq__(self, other: Any, /) -> bool:
-        return (
-            isinstance(other, self.__class__)
-            and other.id == self.id
-            or isinstance(other, pygame.Window)
-            and other.id == self.id
+        return (isinstance(other, self.__class__) and other.id == self.id) or (
+            isinstance(other, pygame.Window) and other.id == self.id
         )
+
+    @override
+    def __hash__(self) -> int:
+        return hash(self.id)
 
     @property
     def input_managers(self) -> Sequence[InputManager]:
@@ -154,9 +158,10 @@ class Window:
     @property
     def underlying(self) -> pygame.Window:
         """
-        The underlying `pygame.Window`.\n
-        Position, size and fullscreen, minimized and maximized states should not be modified directly through this property.\n
-        Use carefully.
+        This `Window`'s underlying `pygame.Window`.
+
+        Position, size and fullscreen, minimized and maximized states should not be modified directly through this
+        property. Use carefully.
         """
 
         return self._underlying
@@ -164,7 +169,7 @@ class Window:
     @property
     def handle(self) -> int:
         """
-        The window handle. Only available on Windows.
+        This `Window`'s handle. Only available on Windows.
 
         Raises
         ------
@@ -190,7 +195,7 @@ class Window:
 
     @property
     def is_open(self) -> bool:
-        """Whether this window is open."""
+        """Whether this `Window` is open."""
 
         try:
             _ = self.surface
@@ -201,12 +206,14 @@ class Window:
 
     @property
     def is_closed(self) -> bool:
-        """Whether this window is closed."""
+        """Whether this `Window` is closed."""
 
         return not self.is_open
 
     @property
     def should_flip(self) -> bool:
+        """Whether this `Window` should call `flip` on `post_update`."""
+
         return self._should_flip
 
     @should_flip.setter
@@ -295,7 +302,8 @@ class Window:
     @property
     def fullscreen(self) -> bool:
         """
-        Whether or not this window is fullscreened.\n
+        Whether or not this window is fullscreened.
+
         Does some extra magic on Windows to get fullscreening to work, unlike `pygame.Window`'s `set_fullscreen` method.
         """
 
@@ -310,11 +318,7 @@ class Window:
             # i don't really know what the magic numbers mean, i just know that they work.
             # well, mostly. at least they do on my machine
 
-            self.size = (
-                (self.windowing.primary_monitor.size + self._magic_size_offset)
-                if value
-                else self._spec.size
-            )
+            self.size = (self.windowing.primary_monitor.size + self._magic_size_offset) if value else self._spec.size
 
             if value:
                 self.position = self._magic_fullscreen_position
@@ -324,11 +328,7 @@ class Window:
             self._underlying.set_fullscreen(value)
 
         if value:
-            self.app.events.post(
-                PygameEvent(
-                    self.windowing.WINDOWFULLSCREENED, dict(window=self.underlying)
-                )
-            )
+            self.app.events.post(PygameEvent(self.windowing.WINDOWFULLSCREENED, {"window": self.underlying}))
 
     @property
     def minimized(self) -> bool:
@@ -414,9 +414,7 @@ class Window:
             The monitor to center the window on. Centers it on the primary monitor if `None`.
         """
 
-        self.position = (
-            monitor or self.windowing.primary_monitor
-        ).size / 2 - self.size / 2
+        self.position = (monitor or self.windowing.primary_monitor).size / 2 - self.size / 2
 
     def focus(self) -> None:
         """Focuses the window."""
@@ -462,7 +460,7 @@ class Window:
         if self is self.windowing.main_window:
             self.app.quit()
 
-        self.windowing._windows.remove(self)  # pyright: ignore[reportPrivateUsage]
+        self.windowing._windows.remove(self)  # pyright: ignore[reportPrivateUsage]  # ruff: ignore[private-member-access]
 
         self.before_destroy.notify()
 
@@ -515,6 +513,6 @@ class Window:
         if event.type in self._hook_map:
             self._hook_map[event.type].notify(event)
 
-    def _make_event_hook(self, type: int, /) -> Hook[[PygameEvent]]:
-        self._hook_map[type] = Hook[[PygameEvent]]()
-        return self._hook_map[type]
+    def _make_event_hook(self, typ: int, /) -> Hook[[PygameEvent]]:
+        self._hook_map[typ] = Hook[[PygameEvent]]()
+        return self._hook_map[typ]

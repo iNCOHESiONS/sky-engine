@@ -1,5 +1,8 @@
+"""Live reloading module. See `LiveReloading` for more information."""
+
 import os
 import sys
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import final, override
@@ -8,6 +11,7 @@ from watchdog.events import DirModifiedEvent, FileModifiedEvent, FileSystemEvent
 from watchdog.observers import Observer
 
 from sky import Hook, Module
+
 
 __all__ = ["LiveReloading"]
 
@@ -21,19 +25,18 @@ class _LREventHandler(FileSystemEventHandler):
     def on_modified(self, event: DirModifiedEvent | FileModifiedEvent) -> None:
         if str(event.src_path).endswith(".py"):
             self._before_reload.notify()
-            os.execv(sys.executable, ["python"] + sys.argv)
+            os.execv(sys.executable, ["python", *sys.argv])  # ruff: ignore[start-process-with-no-shell]
 
 
 @final
 class LiveReloading(Module):
     """
-    Enables live reloading, meaning the program completely restarts whenever changes are detected in the specified directory.
+    Enables live reloading, meaning the program restarts whenever changes are detected in the specified directory.
+
     Use `before_reload` to add any callbacks to be executed just before the program restarts.
     """
 
-    def __init__(
-        self, /, *, directory: Path | str = ".", recursive: bool = True
-    ) -> None:
+    def __init__(self, /, *, directory: Path | str = ".", recursive: bool = True) -> None:
         if not (directory := Path(directory)).is_dir():
             raise ValueError(f"{directory} must be a directory.")
 

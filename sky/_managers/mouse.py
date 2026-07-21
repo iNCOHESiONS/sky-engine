@@ -1,17 +1,20 @@
-from collections.abc import Mapping
 from typing import TYPE_CHECKING, final, override
 
 import pygame
+
 from pygame.constants import MOUSEBUTTONDOWN, MOUSEBUTTONUP
 
-from .._compat import get_mouse_position
-from ..core import Cursor, InputManager, MouseButton, State
-from ..hook import Hook
-from ..types import CursorLike, MouseButtonLike, StateLike
-from ..utils import Vector2
+from sky._compat import get_mouse_position
+from sky.core import Cursor, InputManager, MouseButton, State
+from sky.hook import Hook
+from sky.utils import Vector2
+
 
 if TYPE_CHECKING:
-    from ..window import Window
+    from collections.abc import Mapping
+
+    from sky.types import CursorLike, MouseButtonLike, StateLike
+    from sky.window import Window
 
 
 __all__ = ["Mouse"]
@@ -44,10 +47,16 @@ class Mouse(InputManager):
         """Executes whenever the state of any mouse button changes `State.released`"""
 
         self.on_mouse_wheel = Hook[[Vector2]]()
-        """Executes whenever the mouse wheel is scrolled. Inputs on the x-axis happen when the wheel is scrolled while shift is being pressed."""
+        """
+        Executes whenever the mouse wheel is scrolled. Inputs on the x-axis happen when the wheel is scrolled while
+        shift is being pressed.
+        """
 
         self.on_scroll = self.on_mouse_wheel  # alias
-        """Executes whenever the mouse wheel is scrolled. Inputs on the x-axis happen when the wheel is scrolled while shift is being pressed. Alias for `on_mouse_wheel`."""
+        """
+        Executes whenever the mouse wheel is scrolled. Inputs on the x-axis happen when the wheel is scrolled while
+        shift is being pressed. Alias for `on_mouse_wheel`.
+        """
 
         self.on_mouse_move = Hook()
         """Executes whenever the mouse's velocity is different from zero."""
@@ -104,30 +113,19 @@ class Mouse(InputManager):
 
     @property
     def cursor(self) -> pygame.Cursor:
-        """Gets the cursor. Use set_cursor() to set the cursor."""
+        """The `pygame.Cursor` displayed within the `Window`. Use set_cursor() to set the cursor."""
 
         return pygame.mouse.get_cursor()
 
     @property
     def relative_mode(self) -> bool:
         """
-        Gets or sets whether the mouse is in relative mode.\n
-        Effectively hides and constrains the mouse to the window, but still reports mouse movement even if the hidden mouse is at the edges of the window and not actually moving.\n
+        Whether the mouse is in relative mode.
+
+        Effectively hides and constrains the mouse to the window, but still reports mouse movement even if the hidden
+        mouse is at the edges of the window and not actually moving.
+
         Useful for 3D games where the player moves the camera with the mouse.
-
-        # Getter
-
-        Returns
-        -------
-        `bool`
-            Whether the mouse is in relative mode.
-
-        # Setter
-
-        Parameters
-        ----------
-        enable: `bool`
-            Whether to enable relative mode.
         """
 
         return pygame.mouse.get_relative_mode()
@@ -148,24 +146,12 @@ class Mouse(InputManager):
         if not self._vel.is_clear():
             self.on_mouse_move.notify()
 
-        downed: set[int] = set(
-            e.button - 1
-            for e in self.app.events.get_many(MOUSEBUTTONDOWN)
-            if self._window == e.window
-        )
-        released: set[int] = set(
-            e.button - 1
-            for e in self.app.events.get_many(MOUSEBUTTONUP)
-            if self._window == e.window
-        )
+        downed: set[int] = {e.button - 1 for e in self.app.events.get_many(MOUSEBUTTONDOWN) if self._window == e.window}
+        released: set[int] = {e.button - 1 for e in self.app.events.get_many(MOUSEBUTTONUP) if self._window == e.window}
 
         for btn, state in self._states.items():
             self._states[btn] = (
-                State.pressed
-                if state is State.downed
-                else State.none
-                if state is State.released
-                else state
+                State.pressed if state is State.downed else State.none if state is State.released else state
             )
 
             if btn in downed:
@@ -177,19 +163,14 @@ class Mouse(InputManager):
             new_state = self._states[btn]
 
             if new_state != State.none:
-                getattr(self, f"on_mouse_button_{new_state.name}").notify(
-                    MouseButton(btn)
-                )
+                getattr(self, f"on_mouse_button_{new_state.name}").notify(MouseButton(btn))
 
             if state != State.none:
                 self.on_mouse_button.notify(MouseButton(btn), new_state)
 
         self._wheel_delta = sum(
-            map(
-                lambda e: Vector2(e.precise_x, e.precise_y),
-                self.app.events.get_many(pygame.MOUSEWHEEL),
-            ),
-            Vector2(),
+            (Vector2(e.precise_x, e.precise_y) for e in self.app.events.get_many(pygame.MOUSEWHEEL)),
+            start=Vector2(),
         )
 
         if not self._wheel_delta.is_clear():
@@ -229,7 +210,9 @@ class Mouse(InputManager):
     def is_state(self, button: MouseButtonLike, state: StateLike, /) -> bool:
         """
         Checks if a button is in a certain state.
-        State can be `State.none` to check if the button is not being interacted with at all.\n
+
+        State can be `State.none` to check if the button is not being interacted with at all.
+
         Equivalent to `self.get_state(button) == state`.
 
         Parameters
@@ -302,7 +285,8 @@ class Mouse(InputManager):
         ----------
         state: `StateLike`
             The state to check for.
-            If no state is specified (and as such `state` is `State.none`), checks if any button is being interacted with at all, i.e., in any state.
+            If no state is specified (and as such `state` is `State.none`), checks if any button is being interacted
+            with at all, i.e., in any state.
 
         Returns
         -------
@@ -313,17 +297,11 @@ class Mouse(InputManager):
         state = State.convert(state)
 
         return (
-            any(b != State.none for b in self.states)
-            if state == State.none
-            else any(b == state for b in self.states)
+            any(b != State.none for b in self.states) if state == State.none else any(b == state for b in self.states)
         )
 
     def set_cursor(self, cursor: CursorLike, /) -> None:
         pygame.mouse.set_cursor(Cursor.as_cursor(cursor))
 
     def _get_pos(self) -> Vector2:
-        return Vector2(
-            get_mouse_position() - self.app.window.position
-            if self.use_system
-            else pygame.mouse.get_pos()
-        )
+        return Vector2(get_mouse_position() - self.app.window.position if self.use_system else pygame.mouse.get_pos())

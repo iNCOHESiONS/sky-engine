@@ -11,11 +11,8 @@ from sky import App, AppSpec, Color, Component, MouseButton, Vector2, WindowSpec
 from sky.colors import WHITE
 from sky.utils import mapl
 
-app = App(
-    spec=AppSpec(
-        window_spec=WindowSpec(state="maximized", resizable=True), modules=[freetype]
-    )
-)
+
+app = App(spec=AppSpec(window_spec=WindowSpec(state="maximized", resizable=True), modules=[freetype]))
 
 app.keyboard.add_keybindings(escape=app.quit, f11=app.window.toggle_fullscreen)
 

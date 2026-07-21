@@ -4,6 +4,7 @@ import os
 
 from .utils import Color, Vector2
 
+
 __all__ = [
     "get_mouse_position",
     "get_window_handle",

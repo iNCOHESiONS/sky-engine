@@ -3,6 +3,7 @@ import pygame
 
 from sky import App, AppSpec, Vector2, WindowSpec
 
+
 app = App(
     spec=AppSpec(window_spec=WindowSpec(size=Vector2(16, 9) * 100)),
 )
@@ -18,9 +19,7 @@ def render() -> None:
 
     if has_image:
         app.window.blit(
-            pygame.surfarray.make_surface(
-                cv2.flip(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), 1).swapaxes(0, 1)
-            )
+            pygame.surfarray.make_surface(cv2.flip(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), 1).swapaxes(0, 1))
         )
 
 

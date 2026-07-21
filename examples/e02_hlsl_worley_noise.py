@@ -2,6 +2,7 @@
 # ^ prevents a ton of type checking errors as compushady lacks stubs
 
 import struct
+
 from ctypes import c_int, sizeof
 from functools import cached_property
 from itertools import chain as flatten
@@ -9,10 +10,12 @@ from random import uniform
 from typing import final, override
 
 import compushady
+
 from compushady.formats import B8G8R8A8_UNORM, R32G32_UINT
 from compushady.shaders.hlsl import compile
 
 from sky import App, Component, Vector2
+
 
 compushady.config.set_debug(True)
 
@@ -45,16 +48,12 @@ class Renderer(Component):
     """
 
     def __init__(self) -> None:
-        self.target = compushady.Texture2D(
-            *app.window.size.ituple(), format=B8G8R8A8_UNORM
-        )
+        self.target = compushady.Texture2D(*app.window.size.ituple(), format=B8G8R8A8_UNORM)
         self.swapchain = compushady.Swapchain(app.window.handle, format=B8G8R8A8_UNORM)
 
         self.generate_points()
 
-        self.compute = compushady.Compute(
-            compile(self.SHADER), uav=[self.target], srv=[self.points_buffer]
-        )
+        self.compute = compushady.Compute(compile(self.SHADER), uav=[self.target], srv=[self.points_buffer])
 
         app.keyboard.add_keybindings(space=self.generate_points)
 
@@ -76,16 +75,11 @@ class Renderer(Component):
         return compushady.Buffer(size=self.staging.size, format=R32G32_UINT)
 
     def update_buffer(self) -> None:
-        self.staging.upload(
-            struct.pack(f"{self.COUNT * 2}i", *map(int, flatten(*self.points)))
-        )
+        self.staging.upload(struct.pack(f"{self.COUNT * 2}i", *map(int, flatten(*self.points))))
         self.staging.copy_to(self.points_buffer)
 
     def generate_points(self) -> None:
-        self.points = [
-            Vector2(uniform(0, app.window.width), uniform(0, app.window.height))
-            for _ in range(self.COUNT)
-        ]
+        self.points = [Vector2(uniform(0, app.window.width), uniform(0, app.window.height)) for _ in range(self.COUNT)]
 
         self.update_buffer()
 

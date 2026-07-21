@@ -1,16 +1,22 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import final, override
+from typing import TYPE_CHECKING, final, override
 
 import pygame
+
 from screeninfo import get_monitors
 
-from ..core import Monitor, Service
-from ..hook import Hook
-from ..spec import WindowSpec
-from ..utils import discard, filter_by_attrs, first, get_by_attrs
-from ..window import Window
+from sky.core import Monitor, Service
+from sky.hook import Hook
+from sky.utils import discard, filter_by_attrs, first, get_by_attrs
+from sky.window import Window
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from sky.spec import WindowSpec
+
 
 __all__ = ["Windowing"]
 
@@ -27,10 +33,7 @@ class Windowing(Service):
 
         self._windows: list[Window] = []
 
-        self._monitors = [
-            Monitor.from_monitor(monitor, index=i)
-            for i, monitor in enumerate(get_monitors())
-        ]
+        self._monitors = [Monitor.from_monitor(monitor, index=i) for i, monitor in enumerate(get_monitors())]
 
         self.on_window_added = Hook[[Window]]()
         self.on_window_removed = Hook[[Window]]()
@@ -50,7 +53,8 @@ class Windowing(Service):
     @property
     def main_window(self) -> Window | None:
         """
-        The main window, or `None` if the app has no windows (headless mode).\n
+        The main window, or `None` if the app has no windows (headless mode).
+
         Use `app.window` for a version of this property that can't be `None`.
         """
 
@@ -81,9 +85,7 @@ class Windowing(Service):
     def primary_monitor(self) -> Monitor:
         """Information about the primary monitor."""
 
-        return first(
-            filter_by_attrs(self._monitors, is_primary=True), default=self.monitors[0]
-        )
+        return first(filter_by_attrs(self._monitors, is_primary=True), default=self.monitors[0])
 
     main_monitor = primary_monitor  # alias
 
@@ -109,7 +111,8 @@ class Windowing(Service):
 
     def remove_window(self, window: Window | pygame.Window, /) -> None:
         """
-        Removes and destroys the specified window.\n
+        Removes and destroys the specified window.
+
         Finds a window using its `underlying` property if a `pygame.Window` is passed.\n
         Simply closes the app if the main window is passed.
 
@@ -124,11 +127,7 @@ class Windowing(Service):
             If the window wasn't found.
         """
 
-        win = (
-            get_by_attrs(self._windows, _underlying=window)
-            if isinstance(window, pygame.Window)
-            else window
-        )
+        win = get_by_attrs(self._windows, _underlying=window) if isinstance(window, pygame.Window) else window
 
         if win is None:
             raise ValueError(f"Window {window} not found.")

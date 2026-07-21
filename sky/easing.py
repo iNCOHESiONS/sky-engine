@@ -1,9 +1,16 @@
+# ruff: file-ignore[undocumented-public-function, magic-value-comparison]
+
 """Easing functions, adapted from https://easings.net. Especially provided for use in `utils.animate`."""
 
 import math
-from typing import Callable, LiteralString
+
+from typing import TYPE_CHECKING, LiteralString
 
 from .utils import Vector2
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 __all__ = [
     "bounce_in",
@@ -75,11 +82,7 @@ def quint_out(t: float, /) -> float:
 
 
 def quint_in_out(t: float, /) -> float:
-    return (
-        16.0 * t * t * t * t * t
-        if t < 0.5
-        else 1.0 - math.pow(-2.0 * t + 2.0, 5.0) / 2.0
-    )
+    return 16.0 * t * t * t * t * t if t < 0.5 else 1.0 - math.pow(-2.0 * t + 2.0, 5.0) / 2.0
 
 
 quint = quint_in_out  # alias
@@ -96,12 +99,8 @@ def expo_out(t: float, /) -> float:
 def expo_in_out(t: float, /) -> float:
     return (
         t
-        if t == 0 or t == 1
-        else (
-            math.pow(2.0, 20.0 * t - 10.0) / 2.0
-            if t < 0.5
-            else (2.0 - math.pow(2.0, -20.0 * t + 10.0)) / 2.0
-        )
+        if t in {0, 1}
+        else (math.pow(2.0, 20.0 * t - 10.0) / 2.0 if t < 0.5 else (2.0 - math.pow(2.0, -20.0 * t + 10.0)) / 2.0)
     )
 
 
@@ -118,23 +117,21 @@ def bounce_out(t: float, /) -> float:
 
     if t < 1.0 / d1:
         return n1 * t * t
-    elif t < 2.0 / d1:
+
+    if t < 2.0 / d1:
         t -= 1.5 / d1
         return n1 * t * t + 0.75
-    elif t < 2.5 / d1:
+
+    if t < 2.5 / d1:
         t -= 2.25 / d1
         return n1 * t * t + 0.9375
-    else:
-        t -= 2.625 / d1
-        return n1 * t * t + 0.984375
+
+    t -= 2.625 / d1
+    return n1 * t * t + 0.984375
 
 
 def bounce_in_out(t: float, /) -> float:
-    return (
-        (1.0 - bounce_out(1.0 - 2.0 * t)) / 2.0
-        if t < 0.5
-        else (1.0 + bounce_out(2.0 * t - 1.0)) / 2.0
-    )
+    return (1.0 - bounce_out(1.0 - 2.0 * t)) / 2.0 if t < 0.5 else (1.0 + bounce_out(2.0 * t - 1.0)) / 2.0
 
 
 bounce = bounce_in_out
@@ -142,56 +139,34 @@ bounce = bounce_in_out
 
 def elastic_in(t: float, /) -> float:
     return (
-        t
-        if t == 0 or t == 1
-        else -math.pow(2.0, 10.0 * t - 10.0)
-        * math.sin((t * 10.0 - 10.75) * ((2.0 * math.pi) / 3.0))
+        t if t in {0, 1} else -math.pow(2.0, 10.0 * t - 10.0) * math.sin((t * 10.0 - 10.75) * ((2.0 * math.pi) / 3.0))
     )
 
 
 def elastic_out(t: float, /) -> float:
-    return (
-        t
-        if t == 0 or t == 1
-        else (
-            math.pow(2.0, -10.0 * t)
-            * math.sin((t * 10.0 - 0.75) * (2.0 * math.pi / 3.0))
-            + 1.0
-        )
-    )
+    return t if t in {0, 1} else (math.pow(2.0, -10.0 * t) * math.sin((t * 10.0 - 0.75) * (2.0 * math.pi / 3.0)) + 1.0)
 
 
 def elastic_in_out(t: float, /) -> float:
-    if t == 0 or t == 1:
+    if t in {0, 1}:
         return t
 
     c5 = (2.0 * math.pi) / 4.5
 
     if t < 0.5:
-        return (
-            -(math.pow(2.0, 20.0 * t - 10.0) * math.sin((20.0 * t - 11.125) * c5)) / 2.0
-        )
+        return -(math.pow(2.0, 20.0 * t - 10.0) * math.sin((20.0 * t - 11.125) * c5)) / 2.0
 
-    return (
-        math.pow(2.0, -20.0 * t + 10.0) * math.sin((20.0 * t - 11.125) * c5)
-    ) / 2.0 + 1.0
+    return (math.pow(2.0, -20.0 * t + 10.0) * math.sin((20.0 * t - 11.125) * c5)) / 2.0 + 1.0
 
 
-def cubic_bezier(
-    name: LiteralString, x1: float, y1: float, x2: float, y2: float, /
-) -> Callable[[float], float]:
+def cubic_bezier(name: LiteralString, x1: float, y1: float, x2: float, y2: float, /) -> Callable[[float], float]:
     p0 = Vector2.zero()
     p1 = Vector2(x1, y1)
     p2 = Vector2(x2, y2)
     p3 = Vector2.one()
 
     def __calculate(t: float, /) -> float:
-        return (
-            (1 - t) ** 3 * p0
-            + 3 * (1 - t) ** 2 * t * p1
-            + 3 * (1 - t) * t**2 * p2
-            + t**3 * p3
-        ).y
+        return ((1 - t) ** 3 * p0 + 3 * (1 - t) ** 2 * t * p1 + 3 * (1 - t) * t**2 * p2 + t**3 * p3).y
 
     __calculate.__name__ = name
 

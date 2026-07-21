@@ -1,12 +1,15 @@
-from collections.abc import Iterator, Sequence
-from typing import Any, Callable, Literal, Self, final
+from typing import TYPE_CHECKING, Any, Literal, Self, final
 
 import pygame
 
-from ..core import Service
-from ..hook import Hook
-from ..types import PygameEvent
-from ..utils import filter_by_attrs, first
+from sky.core import Service
+from sky.hook import Hook
+from sky.types import PygameEvent
+from sky.utils import filter_by_attrs, first
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator, Sequence
 
 __all__ = ["Events"]
 
@@ -54,9 +57,7 @@ class Events(Service):
 
         return self
 
-    def add_callback(
-        self, event: PygameEvent | int, callback: Callable[[PygameEvent], Any], /
-    ) -> None:
+    def add_callback(self, event: PygameEvent | int, callback: Callable[[PygameEvent], Any], /) -> None:
         """
         Adds a callback to be called when the specified event is received.
 
@@ -68,13 +69,13 @@ class Events(Service):
             The callback to call when the event is received.
         """
 
-        type = event.type if isinstance(event, PygameEvent) else event
+        typ = event.type if isinstance(event, PygameEvent) else event
 
         def __callback(e: PygameEvent) -> None:
-            if e.type == type:
+            if e.type == typ:
                 callback(e)
 
-        self._callbacks[type] = self._callbacks.get(type, []) + [__callback]
+        self._callbacks[typ] = [*self._callbacks.get(typ, []), __callback]
 
         self.on_event += __callback
 
@@ -95,13 +96,13 @@ class Events(Service):
 
         self.on_event -= callback
 
-    def remove_all_callbacks(self, type: int, /) -> None:
+    def remove_all_callbacks(self, typ: int, /) -> None:
         """
         Removes all callbacks of the specified type from the event listener.
 
         Parameters
         ----------
-        type: `int`
+        typ: `int`
             The type of events to remove callbacks for.
 
         Raises
@@ -112,7 +113,7 @@ class Events(Service):
 
         # default argument so a ValueError is raised at Hook.__isub__ instead of a KeyError here
         # purely so that the error types from add and remove are consistent
-        for callback in self._callbacks.pop(type, []):
+        for callback in self._callbacks.pop(typ, []):
             self.on_event -= callback
 
     def any(self, /, *args: int) -> bool:
@@ -130,7 +131,7 @@ class Events(Service):
             Whether any of the specified events are in the event queue.
         """
 
-        return any(self.has(type) for type in args)
+        return any(self.has(typ) for typ in args)
 
     def all(self, /, *args: int) -> bool:
         """
@@ -147,15 +148,15 @@ class Events(Service):
             Whether all of the specified events are in the event queue.
         """
 
-        return all(self.has(type) for type in args)
+        return all(self.has(typ) for typ in args)
 
-    def has(self, type: PygameEvent | int, /) -> bool:
+    def has(self, typ: PygameEvent | int, /) -> bool:
         """
         Checks if an event of a certain type is in the event queue.
 
         Parameters
         ----------
-        type: `int`
+        typ: `int`
             The type of event to check for.
 
         Returns
@@ -164,15 +165,15 @@ class Events(Service):
             Whether an event of the specified type is in the event queue.
         """
 
-        return self.get(type if isinstance(type, int) else type.type) is not None
+        return self.get(typ if isinstance(typ, int) else typ.type) is not None
 
-    def lacks(self, type: PygameEvent | int, /) -> bool:
+    def lacks(self, typ: PygameEvent | int, /) -> bool:
         """
         Checks if an event of a certain type is not in the event queue.
 
         Parameters
         ----------
-        type: `pygame.event.Event | int`
+        typ: `pygame.event.Event | int`
             The type of event to check for.
 
         Returns
@@ -181,15 +182,15 @@ class Events(Service):
             Whether an event of the specified type is not in the event queue.
         """
 
-        return not self.has(type)
+        return not self.has(typ)
 
-    def get(self, type: int, /) -> PygameEvent | None:
+    def get(self, typ: int, /) -> PygameEvent | None:
         """
         Gets an event of a certain type.
 
         Parameters
         ----------
-        type: `int`
+        typ: `int`
             The type of event to get.
 
         Returns
@@ -198,15 +199,15 @@ class Events(Service):
             The event of the specified type, or None if no event of that type was found.
         """
 
-        return first(self.get_many(type))
+        return first(self.get_many(typ))
 
-    def get_many(self, type: int, /) -> list[PygameEvent]:
+    def get_many(self, typ: int, /) -> list[PygameEvent]:
         """
         Gets all events of a certain type.
 
         Parameters
         ----------
-        type: `int`
+        typ: `int`
             The type of event to get.
 
         Returns
@@ -215,11 +216,9 @@ class Events(Service):
             The events of the specified type.
         """
 
-        return list(filter_by_attrs(self._events, type=type))
+        return list(filter_by_attrs(self._events, type=typ))
 
-    def post(
-        self, event: PygameEvent | int, /, *, attrs: dict[str, Any] | None = None
-    ) -> None:
+    def post(self, event: PygameEvent | int, /, *, attrs: dict[str, Any] | None = None) -> None:
         """
         Posts an event to the event queue to be handled next frame.
 
@@ -231,9 +230,7 @@ class Events(Service):
             Additional attributes to add to the event. Only applies if `event` is an `int`.
         """
 
-        pygame.event.post(
-            PygameEvent(event, attrs or {}) if isinstance(event, int) else event
-        )
+        pygame.event.post(PygameEvent(event, attrs or {}) if isinstance(event, int) else event)
 
     def allow(self, event: PygameEvent | int, /) -> None:
         """
@@ -265,10 +262,10 @@ class Events(Service):
             When to cancel the event: only for the current frame or for all subsequent frames. Defaults to "frame".
         """
 
-        pygame.event.clear(type := event if isinstance(event, int) else event.type)
+        pygame.event.clear(typ := event if isinstance(event, int) else event.type)
 
-        for event in filter_by_attrs(self, type=type):
-            self._events.remove(event)
+        for evt in filter_by_attrs(self, type=typ):
+            self._events.remove(evt)
 
         if when == "always":
-            pygame.event.set_blocked(type)
+            pygame.event.set_blocked(typ)
