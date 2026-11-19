@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import collections
+
 from collections import ChainMap
+from dataclasses import field
 from inspect import Parameter, signature
 from random import randint, uniform
 from typing import TYPE_CHECKING, Any, Literal, Self, overload, override
@@ -30,6 +33,7 @@ __all__ = [
     "attempt_empty_call",
     "clamp",
     "combine_metaclasses",
+    "default",
     "discard",
     "filter_by_attrs",
     "filter_by_type",
@@ -328,10 +332,10 @@ class Vector2(PygameVector2):
 
     def to_int_tuple(self) -> tuple[int, int]:
         """
-        This `Vector2` as a tuple of integers.
+        Converts the `Vector2` to a tuple of integers.
 
         Useful for passing the vector to functions that specifically expect a tuple of integers as opposed to any
-        sequence of numbers or for unpacking to positional arguments without type checking errors.
+        sequence of numbers, or for unpacking to positional arguments without type checking errors.
 
         Returns
         -------
@@ -649,10 +653,10 @@ class Vector3(PygameVector3):
 
     def to_int_tuple(self) -> tuple[int, int, int]:
         """
-        This `Vector3` as a tuple of integers.
+        Converts the `Vector3` to a tuple of integers.
 
         Useful for passing the vector to functions that specifically expect a tuple of integers as opposed to any
-        sequence of numbers or for unpacking to positional arguments without type checking errors.
+        sequence of numbers, or for unpacking to positional arguments without type checking errors.
 
         Returns
         -------
@@ -1178,13 +1182,15 @@ def identity[T](value: T, /) -> T:
     return value
 
 
-def ilen(i: Iterable[Any], /) -> int:
+def ilen(it: Iterable[Any], /) -> int:
     """
     Consumes and returns the length of an `Iterable`.
 
+    Faster than `len(tuple(it))` or even `sum(1 for _ in it)`.
+
     Parameters
     ----------
-    i: `Iterable[Any]`
+    it: `Iterable[Any]`
         The `Iterable` to get the length of.
 
     Returns
@@ -1193,12 +1199,40 @@ def ilen(i: Iterable[Any], /) -> int:
         The length of the `Iterable`.
     """
 
-    return sum(1 for _ in i)  # faster than len(tuple(i)) or len(list(i))
+    # from: https://github.com/wbolster/cardinality/
+    return len(it) if hasattr(it, "__len__") else d[0][0] if (d := collections.deque(enumerate(it, 1), maxlen=1)) else 0  # pyright: ignore[reportArgumentType]
 
 
-def mapl[T, U](func: Callable[[T], U], i: Iterable[T], /) -> list[U]:
+def mapl[T, R](func: Callable[[T], R], it: Iterable[T], /) -> list[R]:
     """
-    Same as `list(map(func, iter))`.
+    The built-in `map`, but it returns a `list` instead. Simply shorthand for `list(map(func, it))`.
+
+    Parameters
+    ----------
+    func: `Callable[[T], R]`
+        The mapper.
+    it: `Iterable[T]`
+        The iterable.
+
+    Returns
+    -------
+    `list[R]`
+        The resulting list.
+    """
+
+    return list(map(func, it))
+
+
+def filterl[T](func: Callable[[T], bool], it: Iterable[T], /) -> list[T]:
+    """
+    The built-in `filter`, but it returns a `list` instead. Simply shorthand for `list(filter(func, it))`.
+
+    Parameters
+    ----------
+    func: `Callable[[T], bool]`
+        The predicate.
+    it: `Iterable[T]`
+        The iterable.
 
     Returns
     -------
@@ -1206,63 +1240,15 @@ def mapl[T, U](func: Callable[[T], U], i: Iterable[T], /) -> list[U]:
         The resulting list.
     """
 
-    return list(map(func, i))
-
-
-def filterl[T](func: Callable[[T], bool], i: Iterable[T], /) -> list[T]:
-    """
-    Same as `list(filter(func, iter))`.
-
-    Returns
-    -------
-    `list[U]`
-        The resulting list.
-    """
-
-    return list(filter(func, i))
+    return list(filter(func, it))
 
 
 @overload
-def walk_neighbours[T](seq: Sequence[T], /, *, wrap: Literal[True]) -> Generator[tuple[T, T, T]]:
-    """
-    Walks a sequence, yielding each element along with its neighbours.
-
-    For the first value, the left neighbour is the last value of the sequence,
-    and for the last value, the right neighbour is the first value of the sequence.
-
-    Parameters
-    ----------
-    seq: `Sequence[T]`
-        The sequence to walk.
-    wrap: `bool`
-        Whether to wrap values around, guaranteeing no values are `None`.
-
-    Yields
-    ------
-    `tuple[T, T, T]`
-        The current element and its neighbours.
-    """
+def walk_neighbours[T](seq: Sequence[T], /, *, wrap: Literal[True]) -> Generator[tuple[T, T, T]]: ...
 
 
 @overload
-def walk_neighbours[T](seq: Sequence[T], /, *, wrap: Literal[False]) -> Generator[tuple[T | None, T, T | None]]:
-    """
-    Walks a sequence, yielding each element along with its neighbours.
-
-    For the first value, the left neighbour is `None`, and for the last value, the right neighbour is `None`.
-
-    Parameters
-    ----------
-    seq: `Sequence[T]`
-        The sequence to walk.
-    wrap: `bool`
-        Whether to wrap values around, guaranteeing no values are `None`.
-
-    Yields
-    ------
-    `tuple[T | None, T, T | None]`
-        The current element and its neighbours.
-    """
+def walk_neighbours[T](seq: Sequence[T], /, *, wrap: Literal[False]) -> Generator[tuple[T | None, T, T | None]]: ...
 
 
 @overload
@@ -1287,6 +1273,7 @@ def walk_neighbours[T](seq: Sequence[T], /, *, wrap: bool = False) -> Generator[
     ------
     `tuple[T | None, T, T | None]`
         The current element and its neighbours.
+        Typed as `tuple[T, T, T]` in the `wrap=True` overload.
     """
 
     for i, el in enumerate(seq):
@@ -1398,7 +1385,7 @@ def clamp(value: float, minimum: float, maximum: float, /) -> float:
     `float`
         The clamped value.\n
         This function's return type is set to `float` as it is simpler to use, but its actual return type depends on
-        the arguments passed to it. For instance, `clamp(2, 0, 1)` returns 1, which is an `int`.
+        the arguments passed to it. For instance, `clamp(2, 0, 1)` returns `1`, which is an `int`.
     """
 
     return max(minimum, min(value, maximum))
@@ -1580,9 +1567,50 @@ def combine_metaclasses(*metaclasses: type) -> type:
             )
 
 
-def make_module(*, init: Callable[[], None], quit: Callable[[], None]) -> Module:  # ruff: ignore[builtin-argument-shadowing]
+def default[T](factory: Callable[[], T], /) -> T:
     """
-    Creates a `Module` based on an `init` and `quit` method, for ease of use.
+    Shorthand for `field(default_factory=factory)`.
+
+    Parameters
+    ----------
+    factory: `Callable[[], T]`
+        The factory that'll be used to create the field value.
+
+    Returns
+    -------
+    `T`
+        The type returned by the factory.\n
+        This function's real return type is `Field`; it is purposefully typed incorrectly to match `field`, whose return
+        type is also marked as `T`. This is required for proper function with dataclasses.\n
+        This incorrectness is generally irrelevant as this function is meant to be used exclusively for the
+        creation of fields in dataclasses, same as `field`.
+
+    Examples
+    --------
+    ```python
+    @dataclass
+    class GridRenderer(Component):
+        size: tuple[int, int] = defaulted(lambda: (10, 10))
+    ```
+    instead of
+    ```python
+    @dataclass
+    class GridRenderer(Component):
+        size: tuple[int, int] = field(default_factory=lambda: (10, 10))
+    ```
+    """
+
+    return field(default_factory=factory)
+
+
+def make_module(
+    *,
+    init: Callable[[], None],
+    quit: Callable[[], None],  # ruff: ignore[builtin-argument-shadowing]
+    doc: str | None = None,
+) -> Module:
+    """
+    Creates a `Module` based on an `init` and `quit` method.
 
     Parameters
     ----------
@@ -1590,11 +1618,13 @@ def make_module(*, init: Callable[[], None], quit: Callable[[], None]) -> Module
         The modules's `init` method.
     quit: `Callable[[], None]`
         The modules's `quit` method`.
+    doc: `str`, optional
+        The module's docstring.
 
     Returns
     -------
     `Module`
-        A `Module` that simply wraps the specified methods, with no additional metadata in particular.
+        A `Module` that wraps the specified methods.
     """
 
     class __mod:  # ruff: ignore[invalid-class-name]
@@ -1603,5 +1633,7 @@ def make_module(*, init: Callable[[], None], quit: Callable[[], None]) -> Module
 
         def quit(self) -> None:
             quit()
+
+    __mod.__doc__ = doc
 
     return __mod()
