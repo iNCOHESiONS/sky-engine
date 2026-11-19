@@ -40,6 +40,7 @@ classifiers = [
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python",
 ]
@@ -48,69 +49,53 @@ classifiers = [
 pygame-ce = "^2.5.3"
 python = "^3.14"
 pywin32 = [
-  { version = "^311", markers = "sys_platform == 'win32'" },
+  { version = "^311", markers = "sys_platform == 'win32'" },  # windows-only workarounds and extra features
 ]
 screeninfo = "^0.8.1"
 singleton-decorator = "==1.0.0"
-watchdog = "6.0.0"  # for hcr and live reloading modules
-
+watchdog = "6.0.0"  # for hot component reloading and live reloading modules
 
 [tool.ruff]
 preview = true
 line-length = 120
 
 [tool.ruff.lint]
-exclude = ["examples/**", "*_test.py"]
-select = ["ALL"]
-extend-select = [
-    "C4",
-    "E",
-    "F",
-    "FURB",
-    "I",
-    "ICN",
-    "ISC",
-    "NPY",
-    "PTH",
-    "RET",
-    "SIM",
-    "TC",
-    "TD",
-    "TID",
-    "UP",
-    "W",
+exclude = ["examples/**"]
+select = [
+  "C4",
+  "D",
+  "E",
+  "F",
+  "FURB",
+  "I",
+  "ICN",
+  "ISC",
+  "NPY",
+  "PTH",
+  "RET",
+  "SIM",
+  "TC",
+  "TD",
+  "TID",
+  "UP",
+  "W",
 ]
 ignore = [
-    "any-type",
-    "blank-line-after-function",
-    "docstring-extraneous-exception",
-    "docstring-missing-exception",
-    "docstring-starts-with-this",
-    "empty-method-without-abstract-decorator",
-    "error-instead-of-exception",
-    "escape-sequence-in-docstring",
-    "f-string-in-exception",
-    "incorrect-blank-line-before-class",
-    "invalid-todo-tag",
-    "line-contains-fixme",
-    "logging-f-string",
-    "missing-blank-line-after-last-section",
-    "missing-copyright-notice",
-    "missing-todo-author",
-    "missing-todo-link",
-    "multi-line-summary-first-line",
-    "no-self-use",
-    "non-empty-init-module",
-    "non-imperative-mood",
-    "overload-with-docstring",
-    "raise-vanilla-args",
-    "raise-vanilla-args",
-    "raw-string-in-exception",
-    "suspicious-non-cryptographic-random-usage",
-    "too-many-public-methods",
-    "undocumented-magic-method",
-    "undocumented-public-init",
+  "blank-line-after-function",
+  "invalid-todo-tag",
+  "missing-blank-line-after-last-section",
+  "missing-todo-author",
+  "missing-todo-link",
+  "multi-line-summary-first-line",
+  "non-imperative-mood",
+  "undocumented-public-init",
+  "undocumented-magic-method",
+  "overload-with-docstring",
+  "escape-sequence-in-docstring",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"!sky/**" = ["D"]
 
 [tool.ruff.lint.isort]
 lines-between-types = 1
