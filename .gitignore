@@ -4,4 +4,4 @@
 /dist
 *.pyc
 main.py
-test.py
+*test.py
