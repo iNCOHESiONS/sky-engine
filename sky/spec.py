@@ -31,34 +31,34 @@ class WindowSpec:
 
     _: KW_ONLY
 
-    always_on_top: bool = False
-    """Whether or not the window is always on top."""
+    position: Vector2 | None = None
+    """The window's position. If `None`, the default, simply centers the window on the main monitor."""
 
-    borderless: bool = False
-    """Whether or not the window is borderless, which also means it has no decorations."""
+    size: Vector2 = field(default_factory=lambda: Vector2(800, 600))
+    """The window's size. 800x600 by default."""
+
+    title: str = "Sky Engine"
+    """The window's title. "Sky Engine" by default."""
 
     fill: Color | None = field(default_factory=lambda: BLACK)
     """The window's fill color. If `None`, `fill` will not be called on `pre_update`"""
 
     flip: bool = True
-    """Whether or not the window should be flipped on `post_update`, i.e., updated."""
+    """Whether the window should have its pixels updated on `post_update`."""
 
-    graphics_api: Literal["opengl", "vulkan"] | None = None
-    """Enables support for an OpenGL context or a Vulkan instance."""
+    icon: Surface | None = None
+    """The window's icon. Uses the default pygame icon if `None`."""
+
+    resizable: bool = False
+    """Whether the window can be resized. Posts a `pygame.WINDOWRESIZED` event whenever resized."""
+
+    always_on_top: bool = False
+    """Whether the window is always on top."""
 
     hide_from_taskbar: bool = False
     """
     Makes the window a "tool window", which hides it from the taskbar and makes its title bar thinner.
     Windows only.
-    """
-
-    icon: Surface | None = None
-    """The window's icon. Uses the default pygame icon if `None`."""
-
-    initialization: Literal["immediate", "deferred"] = "immediate"
-    """
-    Whether or not the main window should be initialized immediately or wait until `mainloop` is called.
-    This is useful for adding callbacks to the window before the app has started.
     """
 
     input_managers: list[type[InputManager]] = field(default_factory=lambda: [Keyboard, Mouse])
@@ -67,20 +67,20 @@ class WindowSpec:
     Includes `Keyboard` and `Mouse` by default.
     """
 
-    position: Vector2 | None = None
-    """The window's position. If `None`, the default, simply centers the window on the main monitor."""
+    graphics_api: Literal["opengl", "vulkan"] | None = None
+    """Enables support for an OpenGL context or a Vulkan instance."""
 
-    resizable: bool = False
-    """Whether or not the window can be resized. Posts a `pygame.WINDOWRESIZED` event whenever resized."""
-
-    size: Vector2 = field(default_factory=lambda: Vector2(800, 600))
-    """The window's size. 800x600 by default."""
+    initialization: Literal["immediate", "deferred"] = "immediate"
+    """
+    Whether or not the main window should be initialized immediately or wait until `mainloop` is called.
+    This is useful for adding callbacks to the window before the app has started.
+    """
 
     state: Literal["windowed", "minimized", "maximized", "fullscreen"] = "windowed"
     """What state the window should be initialized at. Defaults to windowed."""
 
-    title: str = "Sky Engine"
-    """The window's title. "Sky Engine" by default."""
+    decorations: Literal["default", "dark", "none"] = "default"
+    """The window's decorations. `"dark"` is Windows only, and `"none"` makes the window borderless."""
 
     transparency_color: Color | None = None
     """
@@ -90,7 +90,7 @@ class WindowSpec:
 
     use_surface: bool = True
     """
-    Whether or not to call `get_surface` once the underlying `pygame.Window` is created.
+    Whether to call `get_surface` once the underlying `pygame.Window` is created.
     Setting this to `False` is necessary to use pygame's new `_sdl2.video.Renderer`, as it does not use `Surface`s.
     """
 

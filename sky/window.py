@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, final, override
 
 import pygame
 
-from ._compat import get_window_handle, make_window_transparent
+from ._compat import get_window_handle, make_window_transparent, set_dark_mode_decorations
 from ._managers import Keyboard, Mouse
 from .hook import Hook
 from .types import PygameEvent, PygameRect, PygameSurface
@@ -45,7 +45,7 @@ class Window:
 
         self._underlying = pygame.Window(
             always_on_top=spec.always_on_top,
-            borderless=spec.borderless,
+            borderless=spec.decorations == "none",
             maximized=self._maximized,
             minimized=self._minimized,
             opengl=spec.graphics_api == "opengl",
@@ -63,14 +63,7 @@ class Window:
         self._fullscreen = spec.state == "fullscreen"
 
         if self._fullscreen:
-
-            def __fullscreen() -> None:
-                self.fullscreen = True
-
-            if self.app.is_running:
-                __fullscreen()
-            else:
-                self.app.on_preload += __fullscreen
+            self.fullscreen = True
 
         if spec.position is None:
             self.center_on_monitor()
@@ -91,6 +84,10 @@ class Window:
 
         if spec.transparency_color is not None:
             make_window_transparent(self.handle, spec.transparency_color)
+
+        self._dark_decorations = spec.decorations == "dark"
+        if self._dark_decorations:
+            set_dark_mode_decorations(self.handle, True)
 
         self._hook_map: dict[int, Hook[[PygameEvent]]] = {}
 
@@ -113,14 +110,14 @@ class Window:
 
     @property
     def input_managers(self) -> Sequence[InputManager]:
-        """This `Window`'s input managers."""
+        """The `Window`'s `InputManager`s."""
 
         return self._input_managers.copy()
 
     @property
     def keyboard(self) -> Keyboard:
         """
-        This `Window`'s input manager for the keyboard.
+        The `Window`'s `InputManager` for the keyboard.
 
         Raises
         ------
@@ -136,7 +133,7 @@ class Window:
     @property
     def mouse(self) -> Mouse:
         """
-        This `Window`'s input manager for the mouse.
+        The `Window`'s `InputManager` for the mouse.
 
         Raises
         ------
@@ -158,7 +155,7 @@ class Window:
     @property
     def underlying(self) -> pygame.Window:
         """
-        This `Window`'s underlying `pygame.Window`.
+        The `Window`'s underlying `pygame.Window`.
 
         Position, size and fullscreen, minimized and maximized states should not be modified directly through this
         property. Use carefully.
@@ -169,7 +166,7 @@ class Window:
     @property
     def handle(self) -> int:
         """
-        This `Window`'s handle. Only available on Windows.
+        The `Window` handle. Only available on Windows.
 
         Raises
         ------
@@ -183,19 +180,19 @@ class Window:
 
     @property
     def id(self) -> int:
-        """This `Window`'s unique ID."""
+        """The `Window`'s unique ID."""
 
         return self.underlying.id
 
     @property
     def surface(self) -> PygameSurface:
-        """This `Window`'s surface."""
+        """The `Window`'s surface."""
 
         return self._underlying.get_surface()
 
     @property
     def is_open(self) -> bool:
-        """Whether this `Window` is open."""
+        """Whether the `Window` is open."""
 
         try:
             _ = self.surface
@@ -228,7 +225,7 @@ class Window:
 
     @property
     def title(self) -> str:
-        """This `Window`'s title."""
+        """The `Window`'s title."""
 
         return self._underlying.title
 
@@ -238,7 +235,7 @@ class Window:
 
     @property
     def position(self) -> Vector2:
-        """This `Window`'s position."""
+        """The `Window`'s position."""
 
         return Vector2(self._underlying.position)
 
@@ -248,7 +245,7 @@ class Window:
 
     @property
     def size(self) -> Vector2:
-        """This `Window`'s size."""
+        """The `Window`'s size."""
 
         return Vector2(self._underlying.size)
 
@@ -258,7 +255,7 @@ class Window:
 
     @property
     def width(self) -> int:
-        """This `Window`'s width."""
+        """The `Window`'s width."""
 
         return int(self.size.x)
 
@@ -268,7 +265,7 @@ class Window:
 
     @property
     def height(self) -> int:
-        """This `Window`'s height."""
+        """The `Window`'s height."""
 
         return int(self.size.y)
 
@@ -278,19 +275,19 @@ class Window:
 
     @property
     def rect(self) -> Rect:
-        """This `Window`'s rect."""
+        """The `Window`'s rect."""
 
         return Rect(self.surface.get_rect())
 
     @property
     def center(self) -> Vector2:
-        """This `Window`'s center pixel."""
+        """The `Window`'s center pixel."""
 
         return self.size / 2
 
     @property
     def icon(self) -> pygame.Surface | None:
-        """This `Window`'s icon. `None` if the default icon is being used."""
+        """The `Window`'s icon. `None` if the default icon is being used."""
 
         return self._icon
 
@@ -302,7 +299,7 @@ class Window:
     @property
     def fullscreen(self) -> bool:
         """
-        Whether or not this window is fullscreened.
+        Whether the `Window` is fullscreened.
 
         Does some extra magic on Windows to get fullscreening to work, unlike `pygame.Window`'s `set_fullscreen` method.
         """
@@ -332,7 +329,7 @@ class Window:
 
     @property
     def minimized(self) -> bool:
-        """Whether or not the window is minimized."""
+        """Whether the `Window` is minimized."""
 
         return self._minimized  # FIXME: MAY RETURN INCORRECT VALUES
 
@@ -347,7 +344,7 @@ class Window:
 
     @property
     def maximized(self) -> bool:
-        """Whether or not the window is maximized."""
+        """Whether the `Window` is maximized."""
 
         return self._maximized  # FIXME: MAY RETURN INCORRECT VALUES
 
@@ -362,7 +359,7 @@ class Window:
 
     @property
     def borderless(self) -> bool:
-        """Whether or not the window is borderless."""
+        """Whether the `Window` is borderless."""
 
         return self._underlying.borderless
 
@@ -371,8 +368,19 @@ class Window:
         self._underlying.borderless = value
 
     @property
+    def dark_mode_decorations(self) -> bool:
+        """Whether the `Window`'s decorations are set to dark mode."""
+
+        return self._dark_decorations
+
+    @dark_mode_decorations.setter
+    def dark_mode_decorations(self, value: bool) -> None:
+        self._dark_decorations = value
+        set_dark_mode_decorations(self.handle, value)
+
+    @property
     def resizable(self) -> bool:
-        """Whether or not the window is resizable."""
+        """Whether the `Window` is resizable."""
 
         return self._underlying.resizable
 
@@ -382,7 +390,7 @@ class Window:
 
     @property
     def focused(self) -> bool:
-        """Whether or not the window is focused."""
+        """Whether the `Window` is focused."""
 
         return self.underlying.focused
 
