@@ -2,7 +2,7 @@
 
 from cProfile import run as profile
 from itertools import chain as flatten
-from typing import TYPE_CHECKING, Final, Literal, Self
+from typing import TYPE_CHECKING, Any, Final, Literal, Protocol, Self, overload
 
 import pygame
 
@@ -23,6 +23,12 @@ if TYPE_CHECKING:
 
 
 __all__ = ["App"]
+
+
+class _ComponentDecorator(Protocol):
+    """Used in `immediate_component`."""
+
+    def __call__[C: type[Component]](self, cls: C, /) -> C: ...
 
 
 @singleton
@@ -556,24 +562,45 @@ class App:
 
         return singleton(self.immediate_component(cls))
 
-    def immediate_component[C: type[Component]](self, cls: C, /) -> C:
+    @overload
+    def immediate_component[C: type[Component]](self, cls: C, /) -> C: ...
+
+    @overload
+    def immediate_component(self, /, *args: Any, **kwargs: Any) -> _ComponentDecorator: ...  # pyright: ignore[reportOverlappingOverload]
+
+    def immediate_component(self, /, *args: Any, **kwargs: Any) -> Any:
         """
         Instantiates and adds the instance of the decorated `Component` class to the current `Scene` immediately.
 
+        Can be used bare (`@app.immediate_component`) or called with arguments (`@app.immediate_component(arg=1)`),
+        which are forwarded to the class' constructor.
+
         Parameters
         ----------
-        cls: `C`
-            The type to instantiate. Must be a subclass of `Component`.
+        *args: `Any`
+            Passed to the decorated class' constructor.
+        **kwargs: `Any`
+            Passed to the decorated class' constructor.
 
         Returns
         -------
-        `C`
-            The original type.
+        `C` | `_ComponentDecorator`
+            The original type when used bare, otherwise a decorator that returns the original type.
         """
 
-        self.add_component(cls)
+        if not kwargs and len(args) == 1 and isinstance(args[0], type) and issubclass(args[0], Component):
+            cls = args[0]
+            self.add_component(cls)
+            return cls
 
-        return cls
+        def decorator[C: type[Component]](cls: C, /) -> C:
+            if args or kwargs:
+                self.add_component(cls(*args, **kwargs))
+            else:
+                self.add_component(cls)
+            return cls
+
+        return decorator
 
     def get_component[T: Component = Component](self, /, *, of_type: type[T] | str) -> T | None:
         """
