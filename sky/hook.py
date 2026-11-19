@@ -226,7 +226,7 @@ class Hook[**TParams = [], TReturn: Any = None]:
 
     @property
     def callbacks(self) -> Sequence[Callable[TParams, TReturn]]:
-        """This `Hook`'s callbacks."""
+        """The `Hook`'s callbacks."""
 
         return mapl(itemgetter(0), self._callbacks)
 

@@ -88,12 +88,12 @@ class Sentinel:
 
     @property
     def name(self) -> str:
-        """This `Sentinel`'s name."""
+        """The `Sentinel`'s name."""
 
         return self._id.split("-")[-1]
 
     @property
     def module(self) -> str:
-        """This `Sentinel`'s module's name."""
+        """The `Sentinel`'s module's name."""
 
         return self._id.split("-")[0]
