@@ -1,13 +1,10 @@
 """
 Core engine types.
 
-Also re-exports some `pygame` classes with different names, as the engine has its own wrappers around those types.
+Also re-exports some `pygame` classes with distinct names, as the engine has its own wrappers around those types.
 """
 
-from collections.abc import Generator
-from typing import TYPE_CHECKING, Literal
-
-import pygame
+from typing import TYPE_CHECKING
 
 from pygame import Color as PygameColor
 from pygame import Event as PygameEvent
@@ -18,237 +15,21 @@ from pygame import Vector3 as PygameVector3
 
 
 if TYPE_CHECKING:
-    from .core import Cursor, Key, Modifier, MouseButton, State
+    from collections.abc import Generator
+
     from .yieldable import Yieldable
 
 
 __all__ = [
     "Coroutine",
-    "CursorLike",
-    "KeyLike",
-    "ModifierLike",
-    "MouseButtonLike",
     "PygameColor",
     "PygameEvent",
     "PygameRect",
     "PygameSurface",
     "PygameVector2",
     "PygameVector3",
-    "StateLike",
 ]
 
-
-type KeyLiteral = Literal[
-    "alpha_0",
-    "alpha_1",
-    "alpha_2",
-    "alpha_3",
-    "alpha_4",
-    "alpha_5",
-    "alpha_6",
-    "alpha_7",
-    "alpha_8",
-    "alpha_9",
-    "ac_back",
-    "ampersand",
-    "asterisk",
-    "at",
-    "backquote",
-    "backslash",
-    "backspace",
-    "break_",
-    "capslock",
-    "caret",
-    "clear",
-    "colon",
-    "comma",
-    "currency_subunit",
-    "currency_unit",
-    "delete",
-    "dollar",
-    "down",
-    "end",
-    "equals",
-    "escape",
-    "euro",
-    "exclaim",
-    "f1",
-    "f2",
-    "f3",
-    "f4",
-    "f5",
-    "f6",
-    "f7",
-    "f8",
-    "f9",
-    "f10",
-    "f11",
-    "f12",
-    "f13",
-    "f14",
-    "f15",
-    "greater",
-    "hash",
-    "help",
-    "home",
-    "insert",
-    "keypad0",
-    "keypad1",
-    "keypad2",
-    "keypad3",
-    "keypad4",
-    "keypad5",
-    "keypad6",
-    "keypad7",
-    "keypad8",
-    "keypad9",
-    "keypad_0",
-    "keypad_1",
-    "keypad_2",
-    "keypad_3",
-    "keypad_4",
-    "keypad_5",
-    "keypad_6",
-    "keypad_7",
-    "keypad_8",
-    "keypad_9",
-    "keypad_divide",
-    "keypad_enter",
-    "keypad_equals",
-    "keypad_minus",
-    "keypad_multiply",
-    "keypad_period",
-    "keypad_plus",
-    "left",
-    "left_alt",
-    "left_bracket",
-    "left_control",
-    "left_ctrl",
-    "left_gui",
-    "left_meta",
-    "left_parenthesis",
-    "left_shift",
-    "left_super",
-    "less",
-    "menu",
-    "minus",
-    "mode",
-    "numlock",
-    "numlock_clear",
-    "page_down",
-    "page_up",
-    "pause",
-    "percent",
-    "period",
-    "plus",
-    "power",
-    "print",
-    "printscreen",
-    "question",
-    "quote",
-    "quotedbl",
-    "return_",
-    "right",
-    "right_alt",
-    "right_bracket",
-    "right_control",
-    "right_ctrl",
-    "right_gui",
-    "right_meta",
-    "right_parenthesis",
-    "right_shift",
-    "right_super",
-    "scrolllock",
-    "scrollock",
-    "semicolon",
-    "slash",
-    "space",
-    "sysreq",
-    "tab",
-    "underscore",
-    "unknown",
-    "up",
-    "a",
-    "b",
-    "c",
-    "d",
-    "e",
-    "f",
-    "g",
-    "h",
-    "i",
-    "j",
-    "k",
-    "l",
-    "m",
-    "n",
-    "o",
-    "p",
-    "q",
-    "r",
-    "s",
-    "t",
-    "u",
-    "v",
-    "w",
-    "x",
-    "y",
-    "z",
-    "pre_accent",
-    "tilde",
-    "ç",
-    "_",
-]
-
-type ModifierLiteral = Literal[
-    "left_shift",
-    "right_shift",
-    "left_ctrl",
-    "right_ctrl",
-    "left_alt",
-    "right_alt",
-    "left_meta",
-    "right_meta",
-    "capslock",
-    "numlock",
-    "mode",
-]
-
-type MouseButtonLiteral = Literal[
-    "left",
-    "middle",
-    "right",
-]
-
-type CursorLiteral = Literal[
-    "hand",
-    "arrow",
-    "ibeam",
-    "text",
-    "crosshair",
-    "wait",
-    "size_nw_se",
-    "size_ne_sw",
-    "size_ns",
-    "size_we",
-    "size_all",
-    "no",
-    "default",  # alias
-    "deny",  # alias
-]
-
-type StateLiteral = Literal[
-    "pressed",
-    "downed",
-    "released",
-    "none",
-]
-
-type KeyLike = Key | KeyLiteral | int
-type ModifierLike = Key | Modifier | ModifierLiteral | int
-type MouseButtonLike = MouseButton | MouseButtonLiteral | int
-type StateLike = State | StateLiteral
-type CursorLike = pygame.Cursor | Cursor | CursorLiteral | int
 
 type Coroutine = Generator[type[Yieldable] | Yieldable | None]
 """

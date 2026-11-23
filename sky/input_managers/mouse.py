@@ -1,3 +1,5 @@
+"""Contains the `Mouse` `InputManager`."""
+
 from typing import TYPE_CHECKING, final, override
 
 import pygame
@@ -5,16 +7,19 @@ import pygame
 from pygame.constants import MOUSEBUTTONDOWN, MOUSEBUTTONUP
 
 from sky._compat import get_mouse_position
-from sky.core import Cursor, InputManager, MouseButton, State
+from sky.core import InputManager
 from sky.hook import Hook
 from sky.utils import Vector2
+
+from .core import Cursor, MouseButton, State
 
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from sky.types import CursorLike, MouseButtonLike, StateLike
     from sky.window import Window
+
+    from .types import CursorLike, MouseButtonLike, StateLike
 
 
 __all__ = ["Mouse"]
@@ -103,7 +108,7 @@ class Mouse(InputManager):
 
         return self._wheel_delta.copy()
 
-    scroll_delta = wheel_delta
+    scroll_delta = wheel_delta  # alias
 
     @property
     def states(self) -> Mapping[MouseButton, State]:
@@ -301,6 +306,15 @@ class Mouse(InputManager):
         )
 
     def set_cursor(self, cursor: CursorLike, /) -> None:
+        """
+        Sets the mouse cursor icon.
+
+        Parameters
+        ----------
+        cursor: `CursorLike`
+            The cursor to set.
+        """
+
         pygame.mouse.set_cursor(Cursor.as_cursor(cursor))
 
     def _get_pos(self) -> Vector2:

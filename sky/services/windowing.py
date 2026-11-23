@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Contains the `Windowing` `Service`."""
 
 from typing import TYPE_CHECKING, final, override
 

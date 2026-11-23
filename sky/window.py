@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING, Any, ClassVar, final, override
 import pygame
 
 from ._compat import get_window_handle, make_window_transparent, set_dark_mode_decorations
-from ._managers import Keyboard, Mouse
 from .hook import Hook
+from .input_managers import Keyboard, Mouse
 from .types import PygameEvent, PygameRect, PygameSurface
 from .utils import Color, Rect, Vector2, get_by_type
 
@@ -18,9 +18,9 @@ from .utils import Color, Rect, Vector2, get_by_type
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from ._services import Windowing
     from .app import App
     from .core import InputManager, Monitor
+    from .services import Windowing
     from .spec import WindowSpec
 
 

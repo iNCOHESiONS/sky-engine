@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from dataclasses import KW_ONLY, dataclass, field
+from dataclasses import KW_ONLY, dataclass
 from logging import getLogger
 from typing import TYPE_CHECKING, Literal, Self, final
 
-from ._managers import Keyboard, Mouse
 from .colors import BLACK
 from .core import Component, InputManager, Logger, Module
-from .utils import Color, Vector2
+from .input_managers import Keyboard, Mouse
+from .utils import Color, Vector2, default
 
 
 if TYPE_CHECKING:
@@ -34,13 +34,13 @@ class WindowSpec:
     position: Vector2 | None = None
     """The window's position. If `None`, the default, simply centers the window on the main monitor."""
 
-    size: Vector2 = field(default_factory=lambda: Vector2(800, 600))
+    size: Vector2 = default(lambda: Vector2(800, 600))
     """The window's size. 800x600 by default."""
 
     title: str = "Sky Engine"
     """The window's title. "Sky Engine" by default."""
 
-    fill: Color | None = field(default_factory=lambda: BLACK)
+    fill: Color | None = default(lambda: BLACK)
     """The window's fill color. If `None`, `fill` will not be called on `pre_update`"""
 
     flip: bool = True
@@ -61,7 +61,7 @@ class WindowSpec:
     Windows only.
     """
 
-    input_managers: list[type[InputManager]] = field(default_factory=lambda: [Keyboard, Mouse])
+    input_managers: list[type[InputManager]] = default(lambda: [Keyboard, Mouse])
     """
     The list of constructors for the input managers that will be updated every frame by this window.
     Includes `Keyboard` and `Mouse` by default.
@@ -102,7 +102,7 @@ class SceneSpec:
 
     _: KW_ONLY
 
-    components: list[Component] = field(default_factory=list)
+    components: list[Component] = default(list[Component])
     """The components to add to the `Scene`."""
 
 
@@ -113,21 +113,21 @@ class AppSpec:
 
     _: KW_ONLY
 
-    window_spec: WindowSpec | None = field(default_factory=WindowSpec)
+    window_spec: WindowSpec | None = default(WindowSpec)
     """The default `Window`'s spec. If `None`, will not create a window (headless mode;)."""
 
-    scene_spec: SceneSpec | None = field(default_factory=SceneSpec)
+    scene_spec: SceneSpec | None = default(SceneSpec)
     """The default `Scene`'s spec. If `None`, will not create a default scene."""
 
-    modules: Sequence[type[Module] | Module] = field(default_factory=list[type[Module] | Module])
+    modules: Sequence[type[Module] | Module] = default(list[type[Module] | Module])
     """
     A sequence of modules (or module types) whose lifetime is to be handled by the `App`.
     For that purpose, each module must have an `init` and `quit` method, per the `Module` `Protocol`.
     """
 
-    logger: Logger = field(default_factory=getLogger)
+    logger: Logger = default(getLogger)
     """
-    The logger to use. Must follow the `Logger` Protocol, i.e., must have `debug`, `info`, `warn` and `error` methods.
+    The logger to use. Must follow the `Logger` `Protocol`, i.e., must have `debug`, `info`, `warn` and `error` methods.
     By default, uses an unmodified, unnamed logger returned by `getLogger` from the built-in `logging` module.
     """
 

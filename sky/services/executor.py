@@ -1,3 +1,5 @@
+"""Contains the `Executor` `Service`."""
+
 from inspect import isgeneratorfunction
 from typing import TYPE_CHECKING, Self, final, override
 
@@ -14,7 +16,7 @@ if TYPE_CHECKING:
 
 @final
 class Executor(Service):
-    """Handles `Coroutine`s."""
+    """Handles `Coroutine`s and their execution."""
 
     def __init__(self) -> None:
         self._coroutines: dict[Coroutine, Yieldable] = {}
@@ -114,7 +116,20 @@ class Executor(Service):
         *,
         period: Callable[[], Yieldable],
         delay: Callable[[], Yieldable] | None = None,
-    ) -> None:
+    ) -> Coroutine:
+        """
+        Runs a function in an interval.
+
+        Parameters
+        ----------
+        func: `Callable[[], None] | Callable[[], Coroutine]`
+            The function or `Coroutine`-returning function to repeatedly execute.
+        period: `Callable[[], Yieldable]`
+            A function that returns the wait time between executions as a `Yieldable`.
+        delay: `Callable[[], Yieldable]`, optional
+            A function that returns the wait time before the first execution as a `Yieldable`.
+        """
+
         def __coro() -> Coroutine:
             if delay:
                 yield delay()
@@ -127,7 +142,7 @@ class Executor(Service):
 
                 yield period()
 
-        self.start_coroutine(__coro)
+        return self.start_coroutine(__coro)
 
     def is_active(self, coroutine: Coroutine, /) -> bool:
         """

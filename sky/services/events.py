@@ -1,3 +1,5 @@
+"""Contains the `Events` `Service`."""
+
 from typing import TYPE_CHECKING, Any, Literal, Self, final
 
 import pygame

@@ -6,19 +6,18 @@ from typing import TYPE_CHECKING, Any, Final, Literal, Protocol, Self, overload
 
 import pygame
 
-from ._services import Chrono, Events, Executor, Windowing
 from .core import Component, InputManager, Module, Monitor, Service
 from .hook import Hook
 from .scene import Scene
+from .services import Chrono, Events, Executor, Windowing
 from .spec import AppSpec, SceneSpec, WindowSpec
 from .utils import attempt_empty_call, filter_by_type, filterl, first, singleton
-from .yieldable import Yieldable
 
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Iterator, Sequence
 
-    from ._managers import Keyboard, Mouse
+    from .input_managers import Keyboard, Mouse
     from .window import Window
 
 
@@ -86,23 +85,12 @@ class App:
         *,
         spec: AppSpec | WindowSpec | SceneSpec | None = None,
     ) -> None:
-        """
-        App constructor.
-
-        Parameters
-        ----------
-        spec: `AppSpec | WindowSpec | SceneSpec | None`, optional
-            The `App`'s, main `Window`'s, or main `Scene`'s specification.
-            `None` by default, which creates an `AppSpec` with no arguments.
-            See `AppSpec` for more information.
-        """
-
         pygame.init()
 
         self._handle_references()
 
         self.is_running = False
-        """Whether the app is currently executing its mainloop."""
+        """Whether the app is currently executing its main loop."""
 
         self.spec: Final = (
             AppSpec(window_spec=spec)
@@ -120,7 +108,7 @@ class App:
         """The `App`'s logger."""
 
         self.on_preload = Hook()
-        """Executes before scenes and services are started up, just after mainloop is called."""
+        """Executes before scenes and services are started up, just after main loop is called."""
 
         self.on_setup = Hook()
         """Executes after scenes and services are started up, and before the first frame."""
@@ -138,9 +126,6 @@ class App:
         """
         Executes after scenes and services are stopped, and before the app is destroyed; cleans up registered modules.
         """
-
-        for module in self.spec.modules:
-            self.add_module(module)
 
         self.events = Events()
         """Handles pygame events."""
@@ -167,6 +152,9 @@ class App:
 
         if self.spec.scene_spec:
             self.load_scene(Scene(spec=self.spec.scene_spec))
+
+        for module in self.spec.modules:
+            self.add_module(module)
 
     def __iter__(self) -> Iterator[Scene]:
         yield from self._scenes
@@ -302,6 +290,10 @@ class App:
         else:
             self._mainloop()
 
+    run = mainloop  # alias
+    main_loop = mainloop  # alias
+    __call__ = mainloop  # app = App(); app()
+
     def _mainloop(self) -> None:
         self.on_preload.notify()
 
@@ -339,9 +331,6 @@ class App:
         self.on_cleanup.notify()
 
         pygame.quit()
-
-    run = mainloop  # alias
-    __call__ = mainloop  # app = App(); app()
 
     def load_scene(
         self,
@@ -776,6 +765,5 @@ class App:
     def _handle_references(self) -> None:
         InputManager.app = self
         Component.app = self
-        Yieldable.app = self
         Scene.app = self
         Hook.app = self

@@ -1,3 +1,5 @@
+"""Contains the `Chrono` `Service`."""
+
 # ruff: file-ignore[call-datetime-now-without-tzinfo]
 
 from datetime import datetime, timedelta

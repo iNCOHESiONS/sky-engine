@@ -1,19 +1,17 @@
 """Contains `Yieldable`s, values that can halt the execution of a `Coroutine` for a period of time."""
 
-# pyright: reportUninitializedInstanceVariable=false
-
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from time import perf_counter
-from typing import TYPE_CHECKING, ClassVar, final, override
+from typing import TYPE_CHECKING, final, override
+
+from sky.core import AppAccess
 
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-
-    from .app import App
 
 __all__ = [
     "WaitForFrames",
@@ -24,10 +22,8 @@ __all__ = [
 ]
 
 
-class Yieldable(ABC):
+class Yieldable(ABC, AppAccess):
     """Base class for `Yieldable`s: values that tell the `Executor` to wait or continue executing a `Coroutine`."""
-
-    app: ClassVar[App]
 
     @abstractmethod
     def is_ready(self) -> bool:
@@ -46,6 +42,7 @@ class WaitForFrames(Yieldable):
     """
 
     frames: int = 1
+    _frames_started: float = field(init=False)
 
     def __post_init__(self) -> None:
         self._frames_started = self.app.chrono.frames
@@ -61,6 +58,7 @@ class WaitForSeconds(Yieldable):
     """Waits for a certain amount of seconds to pass."""
 
     seconds: float
+    _time_started: float = field(init=False)
 
     def __post_init__(self) -> None:
         self._time_started = perf_counter()

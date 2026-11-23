@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Contains the `Keyboard` `InputManager`."""
 
 from itertools import starmap
 from typing import TYPE_CHECKING, final, override
@@ -7,16 +7,19 @@ import pygame
 
 from pygame.constants import KEYDOWN, KEYUP
 
-from sky.core import InputManager, Key, Keybinding, State
+from sky.core import InputManager
 from sky.hook import Hook
 from sky.utils import Vector2
+
+from .core import Key, Keybinding, State
 
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
 
-    from sky.types import KeyLike, StateLike
     from sky.window import Window
+
+    from .types import KeyLike, StateLike
 
 __all__ = ["Keyboard"]
 

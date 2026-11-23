@@ -20,6 +20,7 @@ from .types import PygameColor, PygameRect, PygameVector2, PygameVector3
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Iterable, Iterator, Sequence
 
+    from _typeshed import SupportsRichComparison
     from pygame.typing import SequenceLike
 
     from .core import Module
@@ -733,10 +734,7 @@ class Color(PygameColor):
         """
 
         return self.__class__(
-            clamp(self.r + amount, 0, 255),  # pyright: ignore [reportArgumentType]
-            clamp(self.g + amount, 0, 255),  # pyright: ignore [reportArgumentType]
-            clamp(self.b + amount, 0, 255),  # pyright: ignore [reportArgumentType]
-            self.a,
+            clamp(self.r + amount, 0, 255), clamp(self.g + amount, 0, 255), clamp(self.b + amount, 0, 255), self.a
         )
 
     def darken(self, amount: int, /) -> Self:
@@ -928,6 +926,57 @@ class Rect(PygameRect):
         r.center = Vector2(*position)
 
         return r
+
+    def with_pos(self, pos: Vector2) -> Rect:
+        """
+        Returns a copy of this `Rect` with the specified left-top position.
+
+        Parameters
+        ----------
+        pos: `Vector2`
+            The new left-top position.
+
+        Returns
+        -------
+        `Rect`
+            The new Rect.
+        """
+
+        return Rect(pos, self.size)
+
+    def with_center(self, pos: Vector2) -> Rect:
+        """
+        Returns a copy of this `Rect` with the specified center position.
+
+        Parameters
+        ----------
+        pos: `Vector2`
+            The new center position.
+
+        Returns
+        -------
+        `Rect`
+            The new Rect.
+        """
+
+        return Rect.from_center(pos, self.size)
+
+    def with_size(self, size: Vector2) -> Rect:
+        """
+        Returns a copy of this `Rect` with the specified size.
+
+        Parameters
+        ----------
+        size: `Vector2`
+            The new size.
+
+        Returns
+        -------
+        `Rect`
+            The new Rect.
+        """
+
+        return Rect.from_center(self.center, size)
 
     def random_within(self) -> Vector2:
         """
@@ -1367,25 +1416,23 @@ def animate(
             yield y
 
 
-def clamp(value: float, minimum: float, maximum: float, /) -> float:
+def clamp[T: SupportsRichComparison](value: T, minimum: T, maximum: T, /) -> T:
     """
     Clamps a value between a minimum and maximum.
 
     Parameters
     ----------
-    value: `float`
+    value: `T`
         The value to be clamped.
-    minimum: `float`
+    minimum: `T`
         The minimum value.
-    maximum: `float`
+    maximum: `T`
         The maximum value.
 
     Returns
     -------
-    `float`
-        The clamped value.\n
-        This function's return type is set to `float` as it is simpler to use, but its actual return type depends on
-        the arguments passed to it. For instance, `clamp(2, 0, 1)` returns `1`, which is an `int`.
+    `T`
+        The clamped value.
     """
 
     return max(minimum, min(value, maximum))
@@ -1567,7 +1614,7 @@ def combine_metaclasses(*metaclasses: type) -> type:
             )
 
 
-def default[T](factory: Callable[[], T], /) -> T:
+def default[T](factory: Callable[[], T], /, **kwargs: Any) -> T:
     """
     Shorthand for `field(default_factory=factory)`.
 
@@ -1575,6 +1622,8 @@ def default[T](factory: Callable[[], T], /) -> T:
     ----------
     factory: `Callable[[], T]`
         The factory that'll be used to create the field value.
+    **kwargs: `Any`
+        Any extra arguments to be passed into `field`.
 
     Returns
     -------
@@ -1600,7 +1649,7 @@ def default[T](factory: Callable[[], T], /) -> T:
     ```
     """
 
-    return field(default_factory=factory)
+    return field(default_factory=factory, **kwargs)
 
 
 def make_module(

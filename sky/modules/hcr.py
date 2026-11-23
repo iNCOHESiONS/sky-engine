@@ -5,7 +5,6 @@ import inspect
 import sys
 
 from dataclasses import dataclass
-from functools import cached_property
 from operator import itemgetter
 from pathlib import Path
 from typing import TYPE_CHECKING, final, override
@@ -15,7 +14,8 @@ from watchdog.observers import Observer
 
 import __main__
 
-from sky import App, Component, Hook, Module
+from sky import Component, Hook, Module
+from sky.core import AppAccess
 
 
 if TYPE_CHECKING:
@@ -28,12 +28,8 @@ __all__ = ["HotComponentReloading", "hot_reloadable"]
 
 @final
 @dataclass(unsafe_hash=True)
-class _HCREventHandler(FileSystemEventHandler):
+class _HCREventHandler(FileSystemEventHandler, AppAccess):
     _on_reload: Hook[[type[Component], type[Component]]]
-
-    @cached_property
-    def _app(self) -> App:
-        return App()
 
     @override
     def on_modified(self, event: DirModifiedEvent | FileModifiedEvent) -> None:
@@ -43,11 +39,11 @@ class _HCREventHandler(FileSystemEventHandler):
         mod_name = self._resolve_module_name(path)
 
         if mod_name == __main__.__name__:
-            self._app.logger.warning("The app's entrypoint cannot be hot reloaded. Skipping.")
+            self.app.logger.warning("The app's entrypoint cannot be hot reloaded. Skipping.")
             return
 
         if mod_name not in sys.modules:
-            self._app.logger.warning(
+            self.app.logger.warning(
                 f"Module {mod_name} at path {path} was added during runtime. Restart the app if you wish to add a new module.",  # ruff: ignore[line-too-long]
             )
             return
@@ -55,12 +51,12 @@ class _HCREventHandler(FileSystemEventHandler):
         try:
             mod = importlib.reload(sys.modules[mod_name])
         except Exception as exc:  # ruff: ignore[blind-except]
-            self._app.logger.error(str(exc))
-            self._app.logger.warning(f"An error occurred while reloading module {mod_name}. Skipping.")
+            self.app.logger.error(str(exc))
+            self.app.logger.warning(f"An error occurred while reloading module {mod_name}. Skipping.")
             return
 
         for cls in self._iter_hot_reloadable(module=mod):
-            for component in self._app.filter_components(
+            for component in self.app.filter_components(
                 lambda c: c.__class__.__name__ == cls.__name__ and c.__class__.__module__ == cls.__module__,  # ruff: ignore[function-uses-loop-variable]
             ):
                 old_cls = component.__class__

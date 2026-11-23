@@ -1,5 +1,3 @@
-# pyright: reportUnknownMemberType=false, reportUnknownArgumentType=false
-
 import os
 
 from .utils import Color, Vector2
@@ -9,6 +7,7 @@ __all__ = [
     "get_mouse_position",
     "get_window_handle",
     "make_window_transparent",
+    "set_dark_mode_decorations",
 ]
 
 
@@ -55,13 +54,13 @@ if os.name == "nt":
         print("Failed to apply dark mode to window.", file=sys.stderr)
 
     def make_window_transparent(hwnd: int, colorkey: Color, /) -> None:
-        win32gui.SetWindowLong(
+        win32gui.SetWindowLong(  # pyright: ignore[reportUnknownMemberType]
             hwnd,
             win32con.GWL_EXSTYLE,
-            win32gui.GetWindowLong(hwnd, win32con.GWL_EXSTYLE) | win32con.WS_EX_LAYERED,
+            win32gui.GetWindowLong(hwnd, win32con.GWL_EXSTYLE) | win32con.WS_EX_LAYERED,  # pyright: ignore[reportUnknownArgumentType, reportUnknownMemberType]
         )
 
-        win32gui.SetLayeredWindowAttributes(
+        win32gui.SetLayeredWindowAttributes(  # pyright: ignore[reportUnknownMemberType]
             hwnd,
             win32api.RGB(*colorkey.rgb),
             0,
