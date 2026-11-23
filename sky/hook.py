@@ -8,7 +8,6 @@ from bisect import insort
 from operator import itemgetter
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, Self, get_type_hints, overload
 
-from .sentinel import Sentinel
 from .types import Coroutine
 from .utils import first, mapl
 
@@ -20,14 +19,15 @@ if TYPE_CHECKING:
 
 __all__ = ["Hook"]
 
-_NOT_EXECUTED = Sentinel("NOT_EXECUTED")
+_NOT_EXECUTED = sentinel("_NOT_EXECUTED")
 
 
 class Hook[**TParams = [], TReturn: Any = None]:
     """
     A `Hook` that can have callbacks registered to it.
 
-    ## Examples
+    Examples
+    --------
     ### Simple usage:
     ```python
     from sky import Hook
@@ -90,7 +90,6 @@ class Hook[**TParams = [], TReturn: Any = None]:
 
     on_something.add_callback(callback1, priority=0)
     on_something.add_callback(callback2, priority=100)
-
 
     on_something.notify()
     ```
@@ -183,7 +182,7 @@ class Hook[**TParams = [], TReturn: Any = None]:
 
     def __call__[TCallable: Callable[..., Any]](self, callback: TCallable, /) -> TCallable:
         """
-        Adds the decorated function as a callback. Properly handles `Coroutines`.
+        Adds the decorated function as a callback. Properly handles `Coroutine`s.
 
         Parameters
         ----------
