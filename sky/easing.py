@@ -1,6 +1,5 @@
-# ruff: file-ignore[undocumented-public-function, magic-value-comparison]
-
 """Easing functions, adapted from https://easings.net. Especially provided for use in `utils.animate`."""
+# ruff: file-ignore[undocumented-public-function, magic-value-comparison]
 
 import math
 
@@ -160,6 +159,45 @@ def elastic_in_out(t: float, /) -> float:
 
 
 def cubic_bezier(name: LiteralString, x1: float, y1: float, x2: float, y2: float, /) -> Callable[[float], float]:
+    """
+    Creates a Cubic Bezier easing function.
+
+    Parameters
+    ----------
+    name: `LiteralString`
+        The name of the generated function.
+    x1: `float`
+        The x-axis of the first control point. Must be between 0 and 1.
+    y1: `float`
+        The y-axis of the first control point.
+    x2: `float`
+        The x-axis of the second control point. Must be between 0 and 1.
+    y2: `float`
+        The y-axis of the second control point.
+
+    Returns
+    -------
+    `Callable[[float], float]`
+        The generated function.
+
+    Raises
+    ------
+    `ValueError`
+        If x1 or x2 are not between 0 and 1.
+
+    Examples
+    --------
+    ```python
+    ease = cubic_bezier("ease", 0.25, 0.1, 0.25, 1)
+    ease_in = cubic_bezier("ease_in", 0.42, 0, 1, 1)
+    ease_out = cubic_bezier("ease_out", 0, 0, 0.58, 1)
+    ease_in_out = cubic_bezier("ease_in_out", 0.42, 0, 0.58, 1)
+    ```
+    """
+
+    if not 0 <= x1 <= 1 or not 0 <= x2 <= 1:
+        raise ValueError("x-axis control point coordinates must be between 0 and 1.")
+
     p0 = Vector2.zero()
     p1 = Vector2(x1, y1)
     p2 = Vector2(x2, y2)
