@@ -3,7 +3,7 @@ name = "sky-engine"
 version = "0.0.2"
 description = "A wrapper around Pygame that makes it easier to use."
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.15"
 license = "MIT"
 authors = [{ name = "iNCOHESiONS", email = "incohesions@gmail.com" }]
 
@@ -13,7 +13,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.basedpyright]
 typeCheckingMode = "all"
-pythonVersion = "3.14"
+pythonVersion = "3.15"
 
 reportAny = false
 reportExplicitAny = false
@@ -39,7 +39,6 @@ classifiers = [
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.14",
   "Programming Language :: Python :: 3.15",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python",
